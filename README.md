@@ -4,11 +4,10 @@ The pipeline takes Illumina PE FastQ reads as input for various steps of pre-pro
 
 **Steps:**
     
-- Pre-processing using Trimmomatic
-- Assembly using Spades/Velvet
-- Assembly evaluation using QUAST
-- Contig reordering using ABACAS
-- Annotation using Prokka
+- Steo 1: Pre-processing using Trimmomatic
+- Step 2: Assembly using Spades/Velvet
+- Step 3: Assembly evaluation using QUAST
+- Step 4: Contig reordering using ABACAS and Annotation using Prokka
 
 Usage: 
 
