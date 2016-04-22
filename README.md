@@ -42,7 +42,7 @@ Optional Arguments:
   
    Optional:
             
-            FastQC: User can run FastQC on raw sample data using the --qa flag.
+            FastQC: FastQC can be run on raw sample data using --qa flag.
         	
 
 The script can be invoked at any step provided it is supplied with valid -start_step and -end-step flags. 
