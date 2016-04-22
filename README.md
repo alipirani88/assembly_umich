@@ -9,13 +9,13 @@ The pipeline takes Illumina PE FastQ reads as input for various steps of pre-pro
 - Step 3: Assembly evaluation using QUAST
 - Step 4: Contig reordering using ABACAS and Annotation using Prokka
 
-Usage: 
+**Usage:** 
 
 ```
 python pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] [-o OUTPUT_FOLDER] [-start_step START] [-end_step END] [--qa] [-A Assembler] [--err]
 ```
 
-Optional Arguments:
+**Optional Arguments:**
 
         -h, --help		show this help message and exit
         
@@ -45,8 +45,7 @@ Optional Arguments:
             FastQC: FastQC can be run on raw sample data using --qa flag.
         	
 
-The script can be invoked at any step provided it is supplied with valid -start_step and -end-step flags. 
-For e.g: To run only Trimmomatic on the reads, the valid options are:
+## The script can be invoked at any step provided it is supplied with valid -start_step and -end-step flags. For e.g: To run only Trimmomatic on the reads, the valid options are:
 
     python pipeline.py -f1 PATHtoFile1 -f2 PATHtoFile2 -O path_to_outfolder/Output_Foldername/ -start_step 1 -end_step 1
 
