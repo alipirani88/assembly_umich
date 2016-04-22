@@ -115,16 +115,13 @@ if args.start_step and args.end_step:
             assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, out_path)
             (contigs, scaffolds) = get_contigs(out_path, args.assembler)
             quast_evaluation(out_path, contigs, scaffolds)
-
             # reapr(forward_paired, reverse_paired, out_path, contigs, scaffolds)
-
             final_l500_contig = bioawk(contigs, out_path, first_part)
             final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, out_path, first_part)
-	    
             #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
-	    sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
-	    os.system(sed_cmd)
-	    final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
+	        sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
+	        os.system(sed_cmd)
+	        final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
             print "Final Prokka Annotation files are in: %s" % final_annotation_folder
 
         else:
@@ -145,7 +142,7 @@ if args.start_step and args.end_step:
             #reapr(forward_paired, reverse_paired, out_path, contigs, scaffolds)
             final_l500_contig = bioawk(contigs, out_path, first_part)
             final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, out_path, first_part)
-	    sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
+	        sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
             os.system(sed_cmd)
             final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
             print "Final Prokka Annotation files are in: %s" % final_annotation_folder
@@ -167,7 +164,7 @@ if args.start_step and args.end_step:
             final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, out_path, first_part)
             sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
             os.system(sed_cmd)
-	    final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
+	        final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
             print "Final Prokka Annotation files are in: %s" % final_annotation_folder
         else:
             print "\nPlease provide a path to reference genome for Abacas\n"
@@ -182,7 +179,7 @@ if args.start_step and args.end_step:
             print "This is final ordered contigs fasta file: %s" % final_ordered_contigs
             sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
             os.system(sed_cmd)
-	    final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
+	        final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
             print "Final Prokka Annotation files are in: %s" % final_annotation_folder
         else:
             print "\nPlease provide a path to reference genome for Abacas\n"
