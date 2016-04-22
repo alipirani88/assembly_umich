@@ -1,0 +1,80 @@
+# Dependencies: 
+# MUMmer3.23: MUMmer3.23 is included in the assembly_umich bin folder. Add path to this MUMmer folder in $PATH varibale by including: export PATH=$PATH:/scratch/micro612w16_fluxod/shared/bin/MUMmer3.23/ in your bashrc file.
+ 
+
+
+
+
+
+
+
+
+
+
+[bin_path]
+# Path to bin folder residing under assembly_umich folder
+#binbase = /home2/apirani/bin/
+# changed on 6th April
+binbase = /home/apirani/bin/assembly_umich/bin/
+
+[Trimmomatic]
+trimmomatic_bin = /Trimmomatic/
+adaptor_filepath = adapters/TruSeq3-PE.fa
+seed_mismatches = 2
+palindrome_clipthreshold = 30
+simple_clipthreshold = 10
+minadapterlength = 8
+keep_both_reads = true
+window_size = 4
+window_size_quality = 15
+minlength = 40
+headcrop_length = 0
+colon = :
+targetlength = 125
+crop_length = 40
+f_p = /forward_paired.fq.gz
+f_up = /forward_unpaired.fq.gz
+r_p = /reverse_paired.fq.gz
+r_up = /reverse_unpaired.fq.gz
+
+[check_clean]
+paired = 1
+unpaired = 1
+
+[spades]
+spades_bin = /Spades/bin/
+base_cmd = spades.py
+threads = 
+spades_parameters = --careful
+contigs_path = /spades_results/contigs.fasta
+scaffolds_path = /spades_results/scaffolds.fasta
+
+[quast]
+quast_bin = /quast/
+base_cmd = quast.py
+quast_parameters = --threads 8
+
+[reapr]
+reapr_bin = /Reapr_1.0.17/
+base_cmd = reapr
+reapr_parameters = 
+perfectfrombam_parameters = perfect 100 500 3 4 76
+
+
+[abacas]
+abacas_bin = /PAGIT/ABACAS/
+base_cmd = abacas.1.3.1.pl
+
+
+[mummer]
+mummer_bin = /MUMmer3.23/
+
+
+
+
+[velvet]
+velvet_bin =
+base_cmd =
+velvet_parameters =
+contigs_path = /velvet_results/contigs.fa
+scaffolds_path =
