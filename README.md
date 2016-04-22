@@ -1,18 +1,20 @@
-# KPC-AssemblyPipeline
+# Bacterial Genome Assembly Pipeline
 
-The pipeline takes Illumina PE FastQ reads as input for various steps of pre-processing, assembly, evaluation and misassembly detection.
+The pipeline takes Illumina PE FastQ reads as input for various steps of pre-processing, assembly, evaluation and assembly improvement steps.
 
-    Steps:
+**Steps:**
     
-    1. Pre-processing using Trimmomatic
-    
-    2. Assembly using Spades/Velvet
-    
-    3. Assembly evaluation using QUAST
-    
-    4. Misassembly detection using REAPR
+- Pre-processing using Trimmomatic
+- Assembly using Spades/Velvet
+- Assembly evaluation using QUAST
+- Contig reordering using ABACAS
+- Annotation using Prokka
 
-Usage: python pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] [-o OUTPUT_FOLDER] [-start_step START] [-end_step END] [--qa] [-A Assembler] [--err]
+Usage: 
+
+```
+python pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] [-o OUTPUT_FOLDER] [-start_step START] [-end_step END] [--qa] [-A Assembler] [--err]
+```
 
 optional arguments:
 
