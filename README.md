@@ -38,8 +38,9 @@ Optional Arguments:
         --qa                  	Run FastQC for quality check
         
         --err                   Run Spades using built-in BayesHammer Error Corrector
-  
-  
+        
+        -reference              Provide reference genome in case you select step 4 that involves Abacas contig ordering and Annotation
+
    Optional:
             
             FastQC: FastQC can be run on raw sample data using --qa flag.
