@@ -3,6 +3,7 @@
 This pipeline takes Illumina PE FastQ reads as input for various steps of pre-processing, assembly, evaluation, assembly improvement and annotation steps.
 
 The different steps of the pipeline involves quality control and cleaning of reads using [FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) & [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic), assembling the clean reads using [Spades](http://bioinf.spbau.ru/spades)/[Velvet](https://www.ebi.ac.uk/~zerbino/velvet/) assembler, assembly evaluation using [Quast](http://bioinf.spbau.ru/quast), contig reordering in case reference genome provided using [ABACAS](http://abacas.sourceforge.net/) and finally annotation using [PROKKA](http://www.vicbioinformatics.com/software.prokka.shtml).
+
 **Steps:**
     
 - Step 1: Pre-processing using Trimmomatic
