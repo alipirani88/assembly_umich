@@ -1,20 +1,21 @@
-# KPC-AssemblyPipeline
+# Bacterial Genome Assembly Pipeline
 
-The pipeline takes Illumina PE FastQ reads as input for various steps of pre-processing, assembly, evaluation and misassembly detection.
+The pipeline takes Illumina PE FastQ reads as input for various steps of pre-processing, assembly, evaluation and assembly improvement steps.
 
-    Steps:
+**Steps:**
     
-    1. Pre-processing using Trimmomatic
-    
-    2. Assembly using Spades/Velvet
-    
-    3. Assembly evaluation using QUAST
-    
-    4. Misassembly detection using REAPR
+- Steo 1: Pre-processing using Trimmomatic
+- Step 2: Assembly using Spades/Velvet
+- Step 3: Assembly evaluation using QUAST
+- Step 4: Contig reordering using ABACAS and Annotation using Prokka
 
-Usage: python pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] [-o OUTPUT_FOLDER] [-start_step START] [-end_step END] [--qa] [-A Assembler] [--err]
+**Usage:** 
 
-optional arguments:
+```
+python pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] [-o OUTPUT_FOLDER] [-start_step START] [-end_step END] [--qa] [-A Assembler] [--err]
+```
+
+**Optional Arguments:**
 
         -h, --help		show this help message and exit
         
@@ -36,29 +37,28 @@ optional arguments:
         --qa                  	Run FastQC for quality check
         
         --err                   Run Spades using built-in BayesHammer Error Corrector
-  
-  
+        
+        -reference              Provide reference genome in case you select step 4 that involves Abacas contig ordering and Annotation
+
    Optional:
             
-            FastQC: User can run FastQC on raw sample data using the --qa flag.
+            FastQC: FastQC can be run on raw sample data using --qa flag.
         	
 
-The script can be invoked at any step provided it is supplied with valid -start_step and -end-step flags. 
-For e.g: To run only Trimmomatic on the reads, the valid options are:
+***The script can be invoked at any step provided it is supplied with valid -start_step and -end-step flags. 
+For e.g: To run only Trimmomatic on the reads, the valid options are:***
 
-    python pipeline.py -f1 PATHtoFile1 -f2 PATHtoFile2 -O path_to_outfolder/Output_Foldername/ -start_step 1 -end_step 1
+```
+python pipeline.py -f1 PATHtoFile1 -f2 PATHtoFile2 -O path_to_outfolder/Output_Foldername/ -start_step 1 -end_step 1
+```
 
-    Note:
+**Note:**
 
-        Before running pipeline, Make sure the bin directory path and other tool directory path in config file are correct.
-        
-        Input file format: Either fastq or gzipped fastq
-        
-        Output Directory: Pipeline creates output folder for saving the results. -o option expects path followed by output directory name.
-        
-        Assembler: -A option expects the name of assembler. Either Spades or Velvet.
-        
-        Reapr dependancy: You  will  need  R  [6]  to  be  already  installed  and  in  your  path,  in  addition  to  these  Perl modules: File::Basename, File::Copy, File::Spec, File::Spec::Link, Getopt::Long, List::Util.
+- Before running pipeline, Make sure the bin directory path and other tool directory path in config file are correct. Also edit the reference genome path required for ABACAS reordering.
+- Input file format: Either fastq or gzipped fastq
+- Output Directory: Pipeline creates output folder for saving the results. -o option expects path followed by output directory name. The name provided at the end of directory will be used to create a new directory for saving results.
+- Assembler: -A option expects the name of assembler. Either Spades or Velvet. (Velvet is not tested)
         
          
     
+
