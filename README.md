@@ -66,5 +66,17 @@ python pipeline.py -f1 PATHtoFile1 -f2 PATHtoFile2 -o path_to_outfolder/Output_F
 
 
 ## How to set up config file?
-    
 
+The config file used for this pipeline is a YAML type file containing specific details such as path to your bin directory, various tools and reference fasta file, parameters to be used for each tools and other system details. This config file makes it easy to control various parameters for different tools in a single file. An example config file is included in the project.
+
+The path to your bin directory where all the tools required for this pipeline are installed should be specified under the section [bin_path] and variable 'binbase'.
+
+Change the '_bin' variable under each tool section accordingly to the folder name of each tool. e.g: If trimmomatic was installed in a bin directory specified under bin_path section by the name 'Trimmomatic', then the variable 'trimmomatic_bin' should be changed to '/Trimmomatic/' 
+
+In a similar fashion, the reference genome can be specified in the following way:
+
+[KPNIH1]
+ref_name = KPNIH1.fasta
+ref_path = /home/apirani/bin/assembly_umich/bin/reference/KPNIH1/
+
+Here, the main header section [KPNIH1] represents the title for the reference genome. This title is required with the parameter -reference while running the pipeline for contig reordering step. 'ref_name' is the reference fasta filename saved under the path/dir 'ref_path'
