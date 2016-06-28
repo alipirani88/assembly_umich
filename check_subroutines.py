@@ -69,14 +69,16 @@ def check_cleanreads(forward_paired, reverse_paired, forward_unpaired, reverse_u
 
 # Set appropriate path for contigs/scaffolds fasta files. Needed only when quast or reapr runs individually.
 def get_contigs(out_path, assembler):
-	if assembler == "velvet":
-        	contigs = out_path + ConfigSectionMap("velvet")['contigs_path']
-        	scaffolds = ""
-        	return contigs, scaffolds
-    	elif assembler == "spades":
-        	contigs = out_path + ConfigSectionMap("spades")['contigs_path']
-        	scaffolds = out_path + ConfigSectionMap("spades")['scaffolds_path']
-        	return contigs, scaffolds
+    if assembler == "velvet":
+        contigs = out_path + ConfigSectionMap("velvet")['contigs_path']
+        scaffolds = ""
+        return contigs, scaffolds
+    elif assembler == "spades":
+        contigs = out_path + ConfigSectionMap("spades")['contigs_path']
+        scaffolds = out_path + ConfigSectionMap("spades")['scaffolds_path']
+        plasmid_contigs = out_path + ConfigSectionMap("spades")['plasmid_contigs_path']
+        plasmid_scaffolds = out_path + ConfigSectionMap("spades")['plasmid_scaffolds_path']
+        return contigs, scaffolds, plasmid_contigs, plasmid_scaffolds
 ###########################################################################################################################################################################
 
 # Check if the clean Paired and Unpaired reads exists in the output folder.

@@ -80,8 +80,8 @@ file_exists(args.file_1, args.file_2)
 java_check()
 # create an extra config section namely [check_clean] at the start of pipeline to bring it in default format.
 create_config_section()
-reference_genome_path = args.reference
-
+if args.reference:
+    reference_genome_path = ConfigSectionMap(args.reference)['ref_path'] + "/" + ConfigSectionMap(args.reference)['ref_name']
 # start the pipeline with the given start and end steps:
 if args.start_step and args.end_step:
     Forward_read = args.file_1
@@ -105,81 +105,115 @@ if args.start_step and args.end_step:
         print "\n################## Pre-processing, Assembly and Evaluation. ##################\n"
         (forward_paired, reverse_paired, forward_unpaired, reverse_unpaired) = clean_reads(Forward_read, Reverse_read, out_path, args.crop)
         assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, out_path)
-        (contigs, scaffolds) = get_contigs(out_path, args.assembler)
-        quast_evaluation(out_path, contigs, scaffolds)
+        (contigs, scaffolds, plasmid_contigs, plasmid_scaffolds) = get_contigs(out_path, args.assembler)
+        quast_evaluation(out_path, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds)
     elif args.start_step == 1 and args.end_step == 4:
         print "\n################## Pre-processing, Assembly, Evaluation and Misassembly detection. ##################\n"
+        #reference_genome_path = args.reference
+        (forward_paired, reverse_paired, forward_unpaired, reverse_unpaired) = clean_reads(Forward_read, Reverse_read, out_path, args.crop)
+        assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, out_path)
+        (contigs, scaffolds, plasmid_contigs, plasmid_scaffolds) = get_contigs(out_path, args.assembler)
+
+        # reapr(forward_paired, reverse_paired, out_path, contigs, scaffolds)
+        (final_l500_contig, final_l500_plasmid_contig) = bioawk(contigs, plasmid_contigs, out_path, first_part)
+        quast_evaluation(out_path, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds, final_l500_contig, final_l500_plasmid_contig)
         if args.reference:
-            reference_genome_path = args.reference
-            (forward_paired, reverse_paired, forward_unpaired, reverse_unpaired) = clean_reads(Forward_read, Reverse_read, out_path, args.crop)
-            assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, out_path)
-            (contigs, scaffolds) = get_contigs(out_path, args.assembler)
-            quast_evaluation(out_path, contigs, scaffolds)
-            # reapr(forward_paired, reverse_paired, out_path, contigs, scaffolds)
-            final_l500_contig = bioawk(contigs, out_path, first_part)
             final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, out_path, first_part)
             #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
-	        sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
-	        os.system(sed_cmd)
-	        final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
-            print "Final Prokka Annotation files are in: %s" % final_annotation_folder
-
+            sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
+            os.system(sed_cmd)
+            final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
+            print "Final Prokka Annotation files for genome are in: %s" % final_annotation_folder
         else:
             print "\nPlease provide a path to reference genome for Abacas\n"
+            final_ordered_contigs = final_l500_contig
+            #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
+            sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
+            os.system(sed_cmd)
+            final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
+            print "Final Prokka Annotation files for genome are in: %s" % final_annotation_folder
+        sed_cmd = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
+        os.system(sed_cmd)
+        plasmid_first_part = first_part + "_plasmid_"
+        final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, out_path, plasmid_first_part)
+        print "Final Prokka Annotation files for plasmid are in: %s" % final_annotation_folder
 
     elif args.start_step == 2 and args.end_step == 3:
         print "\n################## Assembly and Evaluation step. ##################\n "
         (contigs, scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, out_path)
-        quast_evaluation(out_path, contigs, scaffolds)
+        quast_evaluation(out_path, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds)
     elif args.start_step == 2 and args.end_step == 2:
         print "\n################## Assembly step. ##################\n"
         (contigs, scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, out_path)
     elif args.start_step == 2 and args.end_step == 4:
+        print "\n################## Assembly, Evaluation and Misassembly detection step. ##################\n "
+        (contigs, scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, out_path)
+        #quast_evaluation(out_path, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds)
+        #reapr(forward_paired, reverse_paired, out_path, contigs, scaffolds)
+        (final_l500_contig, final_l500_plasmid_contig) = bioawk(contigs, plasmid_contigs, out_path, first_part)
+        quast_evaluation(out_path, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds, final_l500_contig, final_l500_plasmid_contig)
         if args.reference:
-            print "\n################## Assembly, Evaluation and Misassembly detection step. ##################\n "
-            (contigs, scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, out_path)
-            quast_evaluation(out_path, contigs, scaffolds)
-            #reapr(forward_paired, reverse_paired, out_path, contigs, scaffolds)
-            final_l500_contig = bioawk(contigs, out_path, first_part)
             final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, out_path, first_part)
-	        sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
+            sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
             os.system(sed_cmd)
             final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
             print "Final Prokka Annotation files are in: %s" % final_annotation_folder
         else:
             print "\nPlease provide a path to reference genome for Abacas\n"
+            final_ordered_contigs = final_l500_contig
+            sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
+            os.system(sed_cmd)
+            final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
+            print "Final Prokka Annotation files for genome are in: %s" % final_annotation_folder
+        sed_cmd = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
+        os.system(sed_cmd)
+        plasmid_first_part = first_part + "_plasmid_"
+        final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, out_path, plasmid_first_part)
+        print "Final Prokka Annotation files for plasmid are in: %s" % final_annotation_folder
+
     elif args.start_step == 3 and args.end_step == 3:
         print "\n################## Evaluation step. ##################\n"
-        (contigs, scaffolds) = get_contigs(out_path, args.assembler)
-        quast_evaluation(out_path, contigs, scaffolds)
+        (contigs, scaffolds, plasmid_contigs, plasmid_scaffolds) = get_contigs(out_path, args.assembler)
+        quast_evaluation(out_path, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds)
+
+    # Pending Changes
     elif args.start_step == 3 and args.end_step == 4:
         if args.reference:
             print "\n################## Evaluation and Misassembly detection step. ##################\n"
             (contigs, scaffolds) = get_contigs(out_path, args.assembler)
             #filename = os.path.basename(out_path)
-            final_l500_contig = bioawk(contigs, out_path, first_part)
-            quast_evaluation(out_path, contigs, scaffolds)
+            #quast_evaluation(out_path, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds)
             #reapr(forward_paired, reverse_paired, out_path, contigs, scaffolds)
-            final_l500_contig = bioawk(contigs, out_path, first_part)
+            (final_l500_contig, final_l500_plasmid_contig) = bioawk(contigs, plasmid_contigs, out_path, first_part)
+            quast_evaluation(out_path, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds, final_l500_contig, final_l500_plasmid_contig)
             final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, out_path, first_part)
             sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
             os.system(sed_cmd)
-	        final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
+            sed_cmd = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
+            os.system(sed_cmd)
+            final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
+            plasmid_first_part = first_part + "_plasmid_"
+            final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, out_path, plasmid_first_part)
             print "Final Prokka Annotation files are in: %s" % final_annotation_folder
         else:
             print "\nPlease provide a path to reference genome for Abacas\n"
 
+    # Pending Changes
     elif args.start_step == 4 and args.end_step == 4:
         if args.reference:
             #print "\n################## Misassembly Detection. ##################\n"
-            (contigs, scaffolds) = get_contigs(out_path, args.assembler)
+            (contigs, scaffolds, plasmid_contigs, plasmid_scaffolds) = get_contigs(out_path, args.assembler)
             #reapr(forward_paired, reverse_paired, out_path, contigs, scaffolds)
-            final_l500_contig = bioawk(contigs, out_path, first_part)
+            (final_l500_contig, final_l500_plasmid_contig) = bioawk(contigs, plasmid_contigs, out_path, first_part)
             final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, out_path, first_part)
             print "This is final ordered contigs fasta file: %s" % final_ordered_contigs
-            sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
+            sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part[0:19], final_ordered_contigs)
             os.system(sed_cmd)
-	        final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
+            sed_cmd = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
+            os.system(sed_cmd)
+            final_annotation_folder = prokka(final_ordered_contigs, out_path, first_part)
+            plasmid_first_part = first_part + "_plasmid_"
+            final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, out_path, plasmid_first_part)
             print "Final Prokka Annotation files are in: %s" % final_annotation_folder
         else:
             print "\nPlease provide a path to reference genome for Abacas\n"

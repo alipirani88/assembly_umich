@@ -26,12 +26,15 @@ paired = 1
 unpaired = 1
 
 [spades]
-spades_bin = /Spades/bin/
+spades_bin = /SPAdes-3.8.0-Linux/bin/
 base_cmd = spades.py
 threads = 
 spades_parameters = --careful
+plasmid_spades_parameters = --careful --plasmid
 contigs_path = /spades_results/contigs.fasta
 scaffolds_path = /spades_results/scaffolds.fasta
+plasmid_contigs_path = /spades_plasmid_results/contigs.fasta
+plasmid_scaffolds_path = /spades_plasmid_results/scaffolds.fasta
 
 [quast]
 quast_bin = /quast/
@@ -75,4 +78,8 @@ ref_path = XXXX
 [KPNIH1]
 ref_name = KPNIH1.fasta
 ref_path = /home/apirani/bin/assembly_umich/bin/reference/KPNIH1/
+
+[MRSA_USA_300]
+ref_name = MRSA_USA_300.fasta
+ref_path = /home2/apirani/bin/reference/MRSA_USA_300
 
