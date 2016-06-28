@@ -65,6 +65,6 @@ python pipeline.py -f1 PATHtoFile1 -f2 PATHtoFile2 -o path_to_outfolder/Output_F
 
 
 
-# How to set up config file?
+## How to set up config file?
     
 
