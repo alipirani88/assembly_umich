@@ -65,7 +65,7 @@ python pipeline.py -f1 PATHtoFile1 -f2 PATHtoFile2 -o path_to_outfolder/Output_F
 
 
 
-## How to set up config file
+# How to set up config file
 
 The config file used for this pipeline is a YAML type file containing specific details such as path to your bin directory, tools and reference fasta file, parameters used for each tools and other system details.
 
