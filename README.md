@@ -73,7 +73,16 @@ This config file makes it easy to control various parameters used in the entire 
 
 The path to your bin directory where all the tools required for this pipeline are installed should be specified under the section [bin_path] and variable 'binbase'.
 
+```
+[bin_path]
+binbase = /home/apirani/bin/assembly_umich/bin/
+```
 Change the '_bin' variable under each tool section accordingly to the folder name of each tool. e.g: If trimmomatic was installed in a bin directory specified under bin_path section by the name 'Trimmomatic', then the variable 'trimmomatic_bin' should be changed to '/Trimmomatic/' 
+
+```
+[Trimmomatic]
+trimmomatic_bin = /Trimmomatic/
+```
 
 In a similar fashion, the reference genome can be specified in the following way:
 
