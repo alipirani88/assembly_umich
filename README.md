@@ -51,7 +51,7 @@ python pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] [-o OUTPUT_FOLDER] [-start_ste
 For e.g: To run only Trimmomatic on the reads, the valid options are:***
 
 ```
-python pipeline.py -f1 PATHtoFile1 -f2 PATHtoFile2 -O path_to_outfolder/Output_Foldername/ -start_step 1 -end_step 1
+python pipeline.py -f1 PATHtoFile1 -f2 PATHtoFile2 -o path_to_outfolder/Output_Foldername/ -start_step 1 -end_step 1
 ```
 
 **Note:**
