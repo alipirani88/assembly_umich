@@ -62,6 +62,9 @@ python pipeline.py -f1 PATHtoFile1 -f2 PATHtoFile2 -o path_to_outfolder/Output_F
 - Output Directory: Pipeline creates output folder for saving the results. -o option expects path followed by output directory name. The name provided at the end of directory will be used to create a new directory for saving results.
 - Assembler: -A option expects the name of assembler. Either Spades or Velvet. (Velvet is not tested)
         
-         
+
+
+
+# How to set up config file?
     
 
