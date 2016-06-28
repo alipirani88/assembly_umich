@@ -77,8 +77,10 @@ Change the '_bin' variable under each tool section accordingly to the folder nam
 
 In a similar fashion, the reference genome can be specified in the following way:
 
+```
 [KPNIH1]
 ref_name = KPNIH1.fasta
 ref_path = /home/apirani/bin/assembly_umich/bin/reference/KPNIH1/
+```
 
 Here, the main header section [KPNIH1] represents the title for the reference genome. This title is required with the parameter -reference while running the pipeline for contig reordering step. 'ref_name' is the reference fasta filename saved under the path/dir 'ref_path'
