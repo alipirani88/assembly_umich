@@ -7,7 +7,7 @@ The different steps of the pipeline involves quality control and cleaning of rea
 **Steps:**
     
 - Step 1: Pre-processing using Trimmomatic
-- Step 2: Assembly using Spades/Velvet
+- Step 2: Assembly using Spades/Velvet(Spades assembly steps also involves assembling the plasmids seperately)
 - Step 3: Assembly evaluation using QUAST
 - Step 4: Contig reordering using ABACAS and Annotation using Prokka
 
