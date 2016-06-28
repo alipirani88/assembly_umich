@@ -56,7 +56,7 @@ python pipeline.py -f1 PATHtoFile1 -f2 PATHtoFile2 -o path_to_outfolder/Output_F
 
 **Note:**
 
-- Before running the pipeline, Make sure the bin directory path and other tool directory path in config file are correct. More Details in section [How to set up config file?](https://github.com/alipirani88/assembly_umich/blob/master/README.md#How to set up config file?)
+- Before running the pipeline, Make sure the bin directory path and other tool directory path in config file are correct. More Details in section [How to set up config file?](https://github.com/alipirani88/assembly_umich/blob/master/README.md#How to set up config file)
 - Also edit the reference genome path required for ABACAS reordering. The header name for Reference fasta file should be provided with reference parameter.
 - Input file format: Either fastq or gzipped fastq
 - Output Directory: Pipeline creates output folder for saving the results. -o option expects path followed by output directory name. The name provided at the end of directory will be used to create a new directory for saving results.
@@ -65,7 +65,7 @@ python pipeline.py -f1 PATHtoFile1 -f2 PATHtoFile2 -o path_to_outfolder/Output_F
 
 
 
-## How to set up config file?
+## How to set up config file
 
 The config file used for this pipeline is a YAML type file containing specific details such as path to your bin directory, tools and reference fasta file, parameters used for each tools and other system details.
 
