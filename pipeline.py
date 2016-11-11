@@ -2,32 +2,29 @@ __author__ = 'alipirani'
 
 
 ########################################################################################################################################
-# Usage: pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] [-o OUTPUT_FOLDER] [-start_step START] [-end_step END] [--qa] [-A Assembler] [--err]
-#
+# pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] [-config CONFIG] [-analysis ANALYSIS_NAME] [-o OUTPUT_FOLDER] \
+# [-start_step START_STEP] [-end_step END_STEP] [-A ASSEMBLER] [-type TYPE] [-c CROP] [-reference REFERENCE]
 # optional arguments:
+#   -h, --help            show this help message and exit
 #
-#    -h, --help		show this help message and exit
+# Required arguments:
+#   -f1 FILE_1            Paired End file 1
+#   -config CONFIG        Path to Config file
+#   -analysis ANALYSIS_NAME
+#                         Unique analysis name to save the results
+#   -o OUTPUT_FOLDER      Output Path ending with output directory name to save
+#                         the results
+#   -start_step START_STEP
+#                         Provide the start step. Only 1 works for now.
+#   -end_step END_STEP    Provide the end step. 2/3/4 All three works
+#   -A ASSEMBLER          Choose the assembler to assemble the sample reads.
+#                         Velvet Optimiser or Spades
+#   -type TYPE            Type of analysis: SE or PE
 #
-#    -v, --version         	show program's version number and exit
-#
-#    -f1 FILE_1            	Paired End fastq file 1
-#
-#    -f2 FILE_2            	Paired End fastq file 2
-#
-#    -O OUTPUT_FOLDER        Output Path to save the results
-#
-#    -start_step START_STEP  Provide the start step(1-4)
-#
-#    -end_step END_STEP    	Provide the end step(1-4)
-#
-#    -A ASSEMBLER          	Choose the assembler to assemble the sample reads.
-#                         	Velvet Optimiser or Spades
-#
-#    -reference             Provide reference genome in case you select step 4 that involves Abacas contig re-ordering and Annotation
-#
-#    Optional:
-#
-#         	FastQC: User can run FastQC on raw sample data using the --qa flag.
+# Optional arguments:
+#   -f2 FILE_2            Paired End file 2
+#   -c CROP               choose crop value to crop the reads
+#   -reference REFERENCE  Provide a reference genome for Abacas Contig ordering
 #########################################################################################################################################
 
 # Declaring required python modules
