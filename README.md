@@ -12,11 +12,9 @@ The different steps of the pipeline are cleaning of reads using [Trimmomatic](ht
 - Step 4: Contig reordering using ABACAS and Annotation using Prokka
 
 usage: 
+
 ```
-pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] -config CONFIG -analysis
-                   ANALYSIS_NAME -o OUTPUT_FOLDER [-start_step START_STEP]
-                   [-end_step END_STEP] [-A ASSEMBLER] [-type TYPE] [-c CROP]
-                   [-reference REFERENCE]
+pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] [-config CONFIG] [-analysis ANALYSIS_NAME] [-o OUTPUT_FOLDER] [-start_step START_STEP] [-end_step END_STEP] [-A ASSEMBLER] [-type TYPE] [-c CROP] [-reference REFERENCE]
 
 Assembly pipeline for Illumina SE/PE data
 
