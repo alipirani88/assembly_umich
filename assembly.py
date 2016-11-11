@@ -24,6 +24,7 @@ def spades_assembly(forward_paired, reverse_paired, forward_unpaired, reverse_un
     # check if the clean reads from Trimmomatic exists in the output folder.
     # Set the paired and unpaired string constants based on their availability
     (paired, unpaired) = check_cleanreads(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired)
+    # Pending Changes
     if paired == "0" and unpaired == "0":
         # Clean Paired and unpaired reads doesn't exist. Take raw Input PE files for assembly
         message = "No clean Paired and unpaired reads. Considering forward_paired and reverse_paired as raw Fastq files for assembly.\n"
@@ -45,6 +46,7 @@ def spades_assembly(forward_paired, reverse_paired, forward_unpaired, reverse_un
         os.system(cp_cmdstring)
         print "\n################## End: SPADES ASSEMBLY ##################\n"
         return contigs, scaffolds
+    # Pending Changes
     elif paired == "1" and unpaired == "0":
         # Only clean Paired PE files exists. Take these files for assembly input.
         message = "Taking only paired reads for assembly.\n"
@@ -66,6 +68,7 @@ def spades_assembly(forward_paired, reverse_paired, forward_unpaired, reverse_un
         os.system(cp_cmdstring)
         print "\n################## End: SPADES ASSEMBLY ##################\n"
         return contigs, scaffolds
+    # Pending Changes
     elif paired == "0" and unpaired == "1":
         # Only clean unpaired PE files exists. Pending...
         cmdstring = "This can be single reads......"
