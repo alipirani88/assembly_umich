@@ -2,7 +2,7 @@
 
 This pipeline takes Illumina PE FastQ reads as input for various steps of pre-processing, assembly, evaluation, assembly improvement and annotation steps.
 
-The different steps of the pipeline involves cleaning of reads using [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic), assembling the clean reads using [Spades](http://bioinf.spbau.ru/spades)/[Velvet](https://www.ebi.ac.uk/~zerbino/velvet/) assembler(not functional yet), assembly evaluation using [Quast](http://bioinf.spbau.ru/quast), contig reordering in case reference genome provided using [ABACAS](http://abacas.sourceforge.net/) and finally annotation using [PROKKA](http://www.vicbioinformatics.com/software.prokka.shtml).
+The different steps of the pipeline are cleaning of reads using [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic), assembling the clean reads using [Spades](http://bioinf.spbau.ru/spades)/[Velvet](https://www.ebi.ac.uk/~zerbino/velvet/)not functional yet) assembler(, assembly evaluation using [Quast](http://bioinf.spbau.ru/quast), contig reordering in case reference genome provided using [ABACAS](http://abacas.sourceforge.net/) and finally annotation using [PROKKA](http://www.vicbioinformatics.com/software.prokka.shtml).
 
 **Steps:**
     
@@ -11,11 +11,13 @@ The different steps of the pipeline involves cleaning of reads using [Trimmomati
 - Step 3: Assembly evaluation using QUAST
 - Step 4: Contig reordering using ABACAS and Annotation using Prokka
 
-usage: pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] -config CONFIG -analysis
+usage: 
+```
+pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] -config CONFIG -analysis
                    ANALYSIS_NAME -o OUTPUT_FOLDER [-start_step START_STEP]
                    [-end_step END_STEP] [-A ASSEMBLER] [-type TYPE] [-c CROP]
                    [-reference REFERENCE]
-```
+
 Assembly pipeline for Illumina SE/PE data
 
 optional arguments:
