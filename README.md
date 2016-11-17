@@ -5,13 +5,15 @@ This pipeline takes Illumina PE FastQ reads as input for various steps of pre-pr
 The different steps of the pipeline are cleaning of reads using [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic), assembling the clean reads using [Spades](http://bioinf.spbau.ru/spades)/[Velvet](https://www.ebi.ac.uk/~zerbino/velvet/)(not functional yet) assembler(, assembly evaluation using [Quast](http://bioinf.spbau.ru/quast), contig reordering in case reference genome provided using [ABACAS](http://abacas.sourceforge.net/) and finally annotation using [PROKKA](http://www.vicbioinformatics.com/software.prokka.shtml).
 
 **Steps:**
-    
+***
+
 - Step 1: Pre-processing using Trimmomatic
 - Step 2: Assembly using Spades/Velvet (Spades assembly steps also involves assembling the plasmids seperately)
 - Step 3: Assembly evaluation using QUAST
 - Step 4: Contig reordering using ABACAS and Annotation using Prokka
 
-usage: 
+**Usage:**
+***
 
 ```
 pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] [-config CONFIG] [-analysis ANALYSIS_NAME] [-o OUTPUT_FOLDER] 
@@ -44,13 +46,15 @@ Optional arguments:
 
 The script can be invoked at any step provided it is supplied with valid -start_step and -end-step flags. 
 
-For e.g: To run only Trimmomatic on the reads, the valid options are:
+For example; to run only Trimmomatic on the reads:
+***
 
 ```
 python pipeline.py -f1 PATHtoFile1 -f2 PATHtoFile2 -o path_to_outfolder/ -start_step 1 -end_step 1 -analysis analysis_name -config path_to_config_file -type PE -A spades
 ```
 
 **Note:**
+***
 
 - Before running the pipeline, Make sure the bin directory path and other tool directory path in config file are correct. More Details in section [How to set up config file?](https://github.com/alipirani88/assembly_umich/blob/master/README.md#How to set up config file) below.
 - Also edit the reference genome path required for ABACAS reordering. The header name for Reference fasta file should be provided with reference parameter.
@@ -58,7 +62,8 @@ python pipeline.py -f1 PATHtoFile1 -f2 PATHtoFile2 -o path_to_outfolder/ -start_
 - Output Directory: Pipeline creates output folder for saving the results. -o option expects path where the output directory is required to be created.
 - Assembler: -A option expects the name of assembler. Either Spades or Velvet. (Velvet is not tested)
  
-# How to set up config file?
+**How to set up config file?**
+***
 
 The config file used for this pipeline is a YAML type file containing specific details such as path to your bin directory, tools and reference fasta file, parameters used for each tools and other system details.
 
