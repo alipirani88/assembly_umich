@@ -1,6 +1,6 @@
-20161108|214856| 33006| ERROR: The following critical files could not be used
-20161108|214856| 33006| /home2/apirani/bin/MUMmer3.23/aux_bin/postnuc
-20161108|214856| 33006| /home2/apirani/bin/MUMmer3.23/aux_bin/prenuc
-20161108|214856| 33006| /home2/apirani/bin/MUMmer3.23/mgaps
-20161108|214856| 33006| /home2/apirani/bin/MUMmer3.23/mummer
-20161108|214856| 33006| Check your paths and file permissions and try again
+20161208|170333|  4526| ERROR: The following critical files could not be used
+20161208|170334|  4526| /home2/apirani/bin/MUMmer3.23/aux_bin/postnuc
+20161208|170334|  4526| /home2/apirani/bin/MUMmer3.23/aux_bin/prenuc
+20161208|170334|  4526| /home2/apirani/bin/MUMmer3.23/mgaps
+20161208|170334|  4526| /home2/apirani/bin/MUMmer3.23/mummer
+20161208|170334|  4526| Check your paths and file permissions and try again

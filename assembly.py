@@ -91,7 +91,7 @@ def spades_assembly(forward_paired, reverse_paired, forward_unpaired, reverse_un
 
         try:
             keep_logging(cmdstring, cmdstring, logger, 'debug')
-            #call(cmdstring, logger)
+            call(cmdstring, logger)
             print ""
             keep_logging('Spades assembly results can be found in {}spades_results'.format(out_path), 'Spades assembly results can be found in {}spades_results'.format(out_path), logger, 'info')
         except sp.CalledProcessError:
@@ -101,7 +101,7 @@ def spades_assembly(forward_paired, reverse_paired, forward_unpaired, reverse_un
 
         try:
             keep_logging(plasmid_cmdstring, plasmid_cmdstring, logger, 'debug')
-            #call(plasmid_cmdstring, logger)
+            call(plasmid_cmdstring, logger)
             print ""
             keep_logging('Spades plasmid assembly results can be found in {}spades_plasmid_results'.format(out_path), 'Spades plasmid assembly results can be found in {}spades_plasmid_results'.format(out_path), logger, 'info')
         except sp.CalledProcessError:

@@ -10,7 +10,7 @@ simple_clipthreshold = 10
 minadapterlength = 8
 keep_both_reads = true
 window_size = 4
-window_size_quality = 15
+window_size_quality = 20
 minlength = 40
 headcrop_length = 0
 colon = :
@@ -87,3 +87,6 @@ ref_path = /home/apirani/bin/reference/MRSA_USA_300
 ref_name = cdiff_630.fasta
 ref_path = /home/apirani/bin/reference/CDIFF_630/
 
+[CFT073]
+ref_name = EcoliCFT073.fna
+ref_path = /home/apirani/bin/reference/CFT073/

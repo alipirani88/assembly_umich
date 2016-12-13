@@ -21,8 +21,7 @@ def generate_logger(output_folder, analysis_name, log_unique_time):
     # Create a new logger; create a file handler; create a logging format; add the handlers to the logger
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    #handler = logging.FileHandler('{}/{}_{}_.log.txt'.format(args.output_folder, args.analysis_name, datetime.now().strftime('%Y_%m_%d_%H_%M_%S')))
-    handler = logging.FileHandler('{}/{}_{}_testing.log.txt'.format(output_folder, log_unique_time, analysis_name))
+    handler = logging.FileHandler('{}/{}_{}.log.txt'.format(output_folder, log_unique_time, analysis_name))
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)

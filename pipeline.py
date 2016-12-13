@@ -29,9 +29,16 @@ __author__ = 'alipirani'
 
 # Declaring required python modules
 import argparse
-from config_settings import ConfigSectionMap
 from datetime import datetime
 import ConfigParser
+import subprocess
+import re
+import os
+import errno
+import glob
+from log_modules import  *
+from logging_subprocess import *
+from config_settings import ConfigSectionMap
 from trimmomatic import *
 from assembly import *
 from qa_fastqc import qa_fastqc
@@ -40,13 +47,7 @@ from reapr import reapr
 from abacas import abacas
 from bioawk import bioawk
 from prokka import prokka
-import subprocess
-import re
-import os
-import errno
-import glob
-from log_modules import  *
-from logging_subprocess import *
+
 
 # Command line argument parsing
 def parser():
@@ -73,11 +74,7 @@ def pipeline(args, logger):
     # Check Subroutines and create logger object: Arguments, Input files, Reference Index
     keep_logging('START: Checking Dependencies...', 'Checking Dependencies', logger, 'info')
 
-    if args.output_folder != '':
-        args.output_folder += '/'
-        make_sure_path_exists(args.output_folder)
-
-    # Check if the input file exists
+     # Check if the input file exists
     if args.type != "PE":
         reverse_raw = "None"
         file_exists(args.file_1, reverse_raw)
@@ -132,10 +129,12 @@ def pipeline(args, logger):
             keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger, 'info')
             quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
             keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
+            #final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
+            #final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
             if args.reference:
                 final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
                 #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
-                sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name, final_ordered_contigs)
+                sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 os.system(sed_cmd)
                 final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
@@ -144,20 +143,26 @@ def pipeline(args, logger):
                 print "\nPlease provide a path to reference genome for Abacas\n"
                 final_ordered_contigs = final_l500_contig
                 #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
-                sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name, final_ordered_contigs)
+                sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_ordered_contigs)
                 sed_cmd_2 = "sed -i 's/_length_.*//g' %s" % (final_ordered_contigs)
+                #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 keep_logging(sed_cmd_2, sed_cmd_2, logger, 'debug')
+                keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
                 os.system(sed_cmd)
                 os.system(sed_cmd_2)
+                #os.system(sed_cmd_3)
                 final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
                 keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), 'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), logger, 'debug')
-            sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name, final_l500_plasmid_contig)
-            sed_cmd_2 = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
+            sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_l500_plasmid_contig)
+            #sed_cmd_2 = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
+            sed_cmd_2 = "sed -i 's/_length_.*component//g' %s" % (final_l500_plasmid_contig)
+            #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_l500_plasmid_contig)
             keep_logging(sed_cmd, sed_cmd, logger, 'debug')
             keep_logging(sed_cmd_2, sed_cmd, logger, 'debug')
             os.system(sed_cmd)
             os.system(sed_cmd_2)
+            #os.system(sed_cmd_3)
             plasmid_first_part = args.analysis_name + "_plasmid"
             final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part, logger, Config)
             keep_logging('Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), 'Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), logger, 'debug')
@@ -166,95 +171,149 @@ def pipeline(args, logger):
             (contigs, scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, args.output_folder)
             quast_evaluation(args.output_folder, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds)
 
+        elif args.start_step == 2 and args.end_step == 2:
+            keep_logging('START: Starting Assembly using {}'.format(args.assembler), 'START: Starting Assembly using {}'.format(args.assembler), logger, 'info')
+            (contigs, scaffolds, plasmid_contigs, plasmid_scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, args.output_folder, logger, Config)
+            keep_logging('END: Starting Assembly using {}'.format(args.assembler), 'END: Starting Assembly using {}'.format(args.assembler), logger, 'info')
+
+        elif args.start_step == 2 and args.end_step == 4:
+            keep_logging('START: Starting Assembly using {}'.format(args.assembler), 'START: Starting Assembly using {}'.format(args.assembler), logger, 'info')
+            (contigs, scaffolds, plasmid_contigs, plasmid_scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, args.output_folder, logger, Config)
+            keep_logging('END: Starting Assembly using {}'.format(args.assembler), 'END: Starting Assembly using {}'.format(args.assembler), logger, 'info')
+            (final_l500_contig, final_l500_plasmid_contig) = bioawk(contigs, plasmid_contigs, args.output_folder, args.analysis_name, logger, Config)
+            keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger, 'info')
+            quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
+            keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
+            #final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
+            #final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
+            if args.reference:
+                final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
+                #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
+                sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
+                keep_logging(sed_cmd, sed_cmd, logger, 'debug')
+                os.system(sed_cmd)
+                final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
+                keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), 'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), logger, 'debug')
+            else:
+                print "\nPlease provide a path to reference genome for Abacas\n"
+                final_ordered_contigs = final_l500_contig
+                #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
+                sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_ordered_contigs)
+                sed_cmd_2 = "sed -i 's/_length_.*//g' %s" % (final_ordered_contigs)
+                #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
+                keep_logging(sed_cmd, sed_cmd, logger, 'debug')
+                keep_logging(sed_cmd_2, sed_cmd_2, logger, 'debug')
+                keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
+                os.system(sed_cmd)
+                os.system(sed_cmd_2)
+                #os.system(sed_cmd_3)
+                final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
+                keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), 'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), logger, 'debug')
+            sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_l500_plasmid_contig)
+            #sed_cmd_2 = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
+            sed_cmd_2 = "sed -i 's/_length_.*component//g' %s" % (final_l500_plasmid_contig)
+            #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_l500_plasmid_contig)
+            keep_logging(sed_cmd, sed_cmd, logger, 'debug')
+            keep_logging(sed_cmd_2, sed_cmd, logger, 'debug')
+            os.system(sed_cmd)
+            os.system(sed_cmd_2)
+            #os.system(sed_cmd_3)
+            plasmid_first_part = args.analysis_name + "_plasmid"
+            final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part, logger, Config)
+            keep_logging('Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), 'Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), logger, 'debug')
 
 
-        # Pending Changes.
-        # elif args.start_step == 2 and args.end_step == 2:
-        #     print "\n################## Assembly step. ##################\n"
-        #     (contigs, scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, args.output_folder)
-        # elif args.start_step == 2 and args.end_step == 4:
-        #     print "\n################## Assembly, Evaluation and Misassembly detection step. ##################\n "
-        #     (contigs, scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, args.output_folder)
-        #     #quast_evaluation(args.output_folder, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds)
-        #     #reapr(forward_paired, reverse_paired, args.output_folder, contigs, scaffolds)
-        #     (final_l500_contig, final_l500_plasmid_contig) = bioawk(contigs, plasmid_contigs, args.output_folder, first_part)
-        #     quast_evaluation(args.output_folder, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds, final_l500_contig, final_l500_plasmid_contig)
-        #     if args.reference:
-        #         final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, first_part)
-        #         sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
-        #         os.system(sed_cmd)
-        #         final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, first_part)
-        #         print "Final Prokka Annotation files are in: %s" % final_annotation_folder
-        #     else:
-        #         print "\nPlease provide a path to reference genome for Abacas\n"
-        #         final_ordered_contigs = final_l500_contig
-        #         sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
-        #         os.system(sed_cmd)
-        #         final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, first_part)
-        #         print "Final Prokka Annotation files for genome are in: %s" % final_annotation_folder
-        #     sed_cmd = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
-        #     os.system(sed_cmd)
-        #     plasmid_first_part = first_part + "_plasmid_"
-        #     final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part)
-        #     print "Final Prokka Annotation files for plasmid are in: %s" % final_annotation_folder
-        #
-        # elif args.start_step == 3 and args.end_step == 3:
-        #     print "\n################## Evaluation step. ##################\n"
-        #     (contigs, scaffolds, plasmid_contigs, plasmid_scaffolds) = get_contigs(args.output_folder, args.assembler)
-        #     quast_evaluation(args.output_folder, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds)
-        #
-        # # Pending Changes
-        # elif args.start_step == 3 and args.end_step == 4:
-        #     if args.reference:
-        #         print "\n################## Evaluation and Misassembly detection step. ##################\n"
-        #         (contigs, scaffolds) = get_contigs(args.output_folder, args.assembler)
-        #         #filename = os.path.basename(out_path)
-        #         #quast_evaluation(out_path, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds)
-        #         #reapr(forward_paired, reverse_paired, out_path, contigs, scaffolds)
-        #         (final_l500_contig, final_l500_plasmid_contig) = bioawk(contigs, plasmid_contigs, args.output_folder, first_part)
-        #         quast_evaluation(args.output_folder, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds, final_l500_contig, final_l500_plasmid_contig)
-        #         final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, first_part)
-        #         sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
-        #         os.system(sed_cmd)
-        #         sed_cmd = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
-        #         os.system(sed_cmd)
-        #         final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, first_part)
-        #         plasmid_first_part = first_part + "_plasmid_"
-        #         final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part)
-        #         print "Final Prokka Annotation files are in: %s" % final_annotation_folder
-        #     else:
-        #         print "\nPlease provide a path to reference genome for Abacas\n"
-        #
-        # # Pending Changes
-        # elif args.start_step == 4 and args.end_step == 4:
-        #     (contigs, scaffolds, plasmid_contigs, plasmid_scaffolds) = get_contigs(args.output_folder, args.assembler)
-        #
-        #     # reapr(forward_paired, reverse_paired, args.output_folder, contigs, scaffolds)
-        #     (final_l500_contig, final_l500_plasmid_contig) = bioawk(contigs, plasmid_contigs, args.output_folder, first_part)
-        #     #quast_evaluation(args.output_folder, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds, final_l500_contig, final_l500_plasmid_contig)
-        #     if args.reference:
-        #         final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, first_part)
-        #         #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
-        #         sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
-        #         os.system(sed_cmd)
-        #         final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, first_part)
-        #         print "Final Prokka Annotation files for genome are in: %s" % final_annotation_folder
-        #     else:
-        #         print "\nPlease provide a path to reference genome for Abacas\n"
-        #         final_ordered_contigs = final_l500_contig
-        #         #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
-        #         sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (first_part, final_ordered_contigs)
-        #         os.system(sed_cmd)
-        #         final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, first_part)
-        #         print "Final Prokka Annotation files for genome are in: %s" % final_annotation_folder
-        #     sed_cmd = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
-        #     os.system(sed_cmd)
-        #     plasmid_first_part = first_part + "_plasmid_"
-        #     #final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part)
-        #     #print "Final Prokka Annotation files for plasmid are in: %s" % final_annotation_folder
-        # else:
-        # print "ERROR: Please provide start and end steps for the pipeline.\n"
 
+        elif args.start_step == 3 and args.end_step == 3:
+            keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger, 'info')
+            quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
+            keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
+
+        elif args.start_step == 3 and args.end_step == 4:
+            keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger, 'info')
+            quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
+            keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
+            #final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
+            #final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
+            if args.reference:
+                final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
+                #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
+                sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
+                keep_logging(sed_cmd, sed_cmd, logger, 'debug')
+                os.system(sed_cmd)
+                final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
+                keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), 'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), logger, 'debug')
+            else:
+                print "\nPlease provide a path to reference genome for Abacas\n"
+                final_ordered_contigs = final_l500_contig
+                #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
+                sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_ordered_contigs)
+                sed_cmd_2 = "sed -i 's/_length_.*//g' %s" % (final_ordered_contigs)
+                #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
+                keep_logging(sed_cmd, sed_cmd, logger, 'debug')
+                keep_logging(sed_cmd_2, sed_cmd_2, logger, 'debug')
+                keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
+                os.system(sed_cmd)
+                os.system(sed_cmd_2)
+                #os.system(sed_cmd_3)
+                final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
+                keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), 'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), logger, 'debug')
+            sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_l500_plasmid_contig)
+            #sed_cmd_2 = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
+            sed_cmd_2 = "sed -i 's/_length_.*component//g' %s" % (final_l500_plasmid_contig)
+            #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_l500_plasmid_contig)
+            keep_logging(sed_cmd, sed_cmd, logger, 'debug')
+            keep_logging(sed_cmd_2, sed_cmd, logger, 'debug')
+            os.system(sed_cmd)
+            os.system(sed_cmd_2)
+            #os.system(sed_cmd_3)
+            plasmid_first_part = args.analysis_name + "_plasmid"
+            final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part, logger, Config)
+            keep_logging('Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), 'Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), logger, 'debug')
+
+
+
+        elif args.start_step == 4 and args.end_step == 4:
+            final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
+            final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
+            if args.reference:
+                final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
+                #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
+                sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
+                keep_logging(sed_cmd, sed_cmd, logger, 'debug')
+                os.system(sed_cmd)
+                final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
+                keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), 'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), logger, 'debug')
+            else:
+                print "\nPlease provide a path to reference genome for Abacas\n"
+                final_ordered_contigs = final_l500_contig
+                #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
+                sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_ordered_contigs)
+                sed_cmd_2 = "sed -i 's/_length_.*//g' %s" % (final_ordered_contigs)
+                #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
+                keep_logging(sed_cmd, sed_cmd, logger, 'debug')
+                keep_logging(sed_cmd_2, sed_cmd_2, logger, 'debug')
+                keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
+                os.system(sed_cmd)
+                os.system(sed_cmd_2)
+                #os.system(sed_cmd_3)
+                final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
+                keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), 'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), logger, 'debug')
+            sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_l500_plasmid_contig)
+            #sed_cmd_2 = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
+            sed_cmd_2 = "sed -i 's/_length_.*component//g' %s" % (final_l500_plasmid_contig)
+            #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_l500_plasmid_contig)
+            keep_logging(sed_cmd, sed_cmd, logger, 'debug')
+            keep_logging(sed_cmd_2, sed_cmd, logger, 'debug')
+            os.system(sed_cmd)
+            os.system(sed_cmd_2)
+            #os.system(sed_cmd_3)
+            plasmid_first_part = args.analysis_name + "_plasmid"
+            final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part, logger, Config)
+            keep_logging('Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), 'Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), logger, 'debug')
+
+        else:
+            keep_logging('ERROR: Please provide start and end steps for the pipeline.', 'ERROR: Please provide start and end steps for the pipeline.', logger, 'exception')
 
 
 #Check Subroutines
@@ -318,7 +377,10 @@ def get_contigs(out_path, assembler):
 
 
 
-# Main Method
+# Main Method:
+# This main method parses the command-line arguments, checks the availability of output folder, generates logger(initiating log file in o/p folder)
+# and finally starts the assembly pipeline method: pipeline
+
 if __name__ == '__main__':
     start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     start_time_2 = datetime.now()
@@ -328,6 +390,9 @@ if __name__ == '__main__':
         config_file = args.config
     else:
         config_file = "./config"
+    if args.output_folder != '':
+        args.output_folder += '/'
+        make_sure_path_exists(args.output_folder)
     global logger
     log_unique_time = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
     logger = generate_logger(args.output_folder, args.analysis_name, log_unique_time)

@@ -27,7 +27,7 @@ def clean_reads(input1, input2, out_path, crop, logger, Config):
         cmdstring = "java -jar " + ConfigSectionMap("bin_path", Config)['binbase'] + ConfigSectionMap("Trimmomatic", Config)['trimmomatic_bin'] + "trimmomatic-0.33.jar PE " + input1 + " " + input2 + " " + clean_filenames + " " + illumina_string + " " + sliding_string + " " + minlen_string + " " + headcrop_string
         keep_logging(cmdstring, cmdstring, logger, 'debug')
         try:
-            #call(cmdstring, logger)
+            call(cmdstring, logger)
             print ""
         except sp.CalledProcessError:
             keep_logging('Error in Trimmomatic Pre-processing step. Exiting.', 'Error in Trimmomatic Pre-processing step. Exiting.', logger, 'exception')
