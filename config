@@ -3,6 +3,7 @@ binbase = /home/apirani/bin/assembly_umich/bin/
 
 [Trimmomatic]
 trimmomatic_bin = /Trimmomatic/
+#adaptor_filepath = adapters/NexteraPE-PE.fa
 adaptor_filepath = adapters/TruSeq3-PE.fa
 seed_mismatches = 2
 palindrome_clipthreshold = 30

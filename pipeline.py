@@ -29,24 +29,25 @@ __author__ = 'alipirani'
 
 # Declaring required python modules
 import argparse
-from datetime import datetime
 import ConfigParser
 import subprocess
 import re
 import os
+import sys
 import errno
 import glob
-from log_modules import  *
-from logging_subprocess import *
+from modules.log_modules import  *
+from modules.logging_subprocess import *
 from config_settings import ConfigSectionMap
-from trimmomatic import *
-from assembly import *
-from qa_fastqc import qa_fastqc
-from quast import quast_evaluation
-from reapr import reapr
-from abacas import abacas
-from bioawk import bioawk
-from prokka import prokka
+from modules.trimmomatic import *
+from modules.assembly import *
+from modules.qa_fastqc import qa_fastqc
+from modules.quast import quast_evaluation
+from modules.reapr import reapr
+from modules.abacas import abacas
+from modules import bioawk, abacas, qa_fastqc, prokka, reapr
+from modules.prokka import prokka
+from datetime import datetime
 
 
 # Command line argument parsing
@@ -148,7 +149,7 @@ def pipeline(args, logger):
                 #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 keep_logging(sed_cmd_2, sed_cmd_2, logger, 'debug')
-                keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
+                #keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
                 os.system(sed_cmd)
                 os.system(sed_cmd_2)
                 #os.system(sed_cmd_3)
@@ -203,7 +204,7 @@ def pipeline(args, logger):
                 #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 keep_logging(sed_cmd_2, sed_cmd_2, logger, 'debug')
-                keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
+                #keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
                 os.system(sed_cmd)
                 os.system(sed_cmd_2)
                 #os.system(sed_cmd_3)
@@ -252,7 +253,7 @@ def pipeline(args, logger):
                 #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 keep_logging(sed_cmd_2, sed_cmd_2, logger, 'debug')
-                keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
+                #keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
                 os.system(sed_cmd)
                 os.system(sed_cmd_2)
                 #os.system(sed_cmd_3)
@@ -293,7 +294,7 @@ def pipeline(args, logger):
                 #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 keep_logging(sed_cmd_2, sed_cmd_2, logger, 'debug')
-                keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
+                #keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
                 os.system(sed_cmd)
                 os.system(sed_cmd_2)
                 #os.system(sed_cmd_3)
