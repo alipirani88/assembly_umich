@@ -38,6 +38,18 @@ A script is provided with the pipeline, generate_jobs.py that will take this fil
 
 Note: Spades assembler requires higher memory cluster and the above resources would be sufficient to run the analysis.
 
+After running the above command, you will find \*.pbs script for each of the sample. You can submit these jobs using a for loop. Before running the loop, make sure the PBS parameters are mentioned correctly.
+
+```
+for i in *.pbs; do qsub $i; done
+```
+
+or if you want to run it locally:
+
+```
+for i in *.pbs; do bash $i; done
+```
+
 <!---
 ## Steps:
 
