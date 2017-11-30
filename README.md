@@ -1,4 +1,4 @@
-# De Novo Microbial Genome Assembly Pipeline(PE)
+# Microbial Genome De Novo Assembly Pipeline(PE)
 
 This pipeline takes Illumina PE FastQ reads as input for various steps of pre-processing, assembly, evaluation, assembly improvement and annotation steps.
 
