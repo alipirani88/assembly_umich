@@ -1,19 +1,40 @@
-# De Novo Microbial Genome Assembly Pipeline(PE)
+# Microbial Genome Assembly Pipeline
 
-This pipeline takes Illumina PE FastQ reads as input for various steps of pre-processing, assembly, evaluation, assembly improvement and annotation steps.
+## Synopsis
 
-The different steps of the pipeline are cleaning of reads using [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic), assembling the clean reads using [Spades](http://bioinf.spbau.ru/spades)/[Velvet](https://www.ebi.ac.uk/~zerbino/velvet/)(not functional yet) assembler(, assembly evaluation using [Quast](http://bioinf.spbau.ru/quast), contig reordering in case reference genome provided using [ABACAS](http://abacas.sourceforge.net/) and finally annotation using [PROKKA](http://www.vicbioinformatics.com/software.prokka.shtml).
+This pipeline takes Illumina PE/SE FastQ reads as input for various steps of pre-processing, assembly, evaluation, assembly improvement and annotation steps.
 
-**Steps:**
-***
+Require testing: The pipeline can also be used to run ariba for finding resistance genes and MLST typing.
+
+## Contents: Wait till 2018!
+
+- [Steps](#Steps)
+- [Input](#input)
+- [Steps](#steps)
+- [Command line options](#command-line-options)
+- [Run pipeline on Compute cluster](#run-pipeline-on-compute-cluster)
+- [Quick Start](#quick-start)
+- [Output Files](#output-files)
+- [Customizing Config file](#customizing-config-file)
+- [Log](#log)
+- [Bonus Ducks](#bonus-ducks)
+
+
+
+
+
+<!---
+## Steps:
+
+The different steps of the pipeline are cleaning of reads using [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic), assembling clean reads using [Spades](http://bioinf.spbau.ru/spades)/[Velvet](https://www.ebi.ac.uk/~zerbino/velvet/)(not functional yet) assembler(, assembly evaluation using [Quast](http://bioinf.spbau.ru/quast), contig reordering in case reference genome provided using [ABACAS](http://abacas.sourceforge.net/) and finally annotation using [PROKKA](http://www.vicbioinformatics.com/software.prokka.shtml).
 
 - Step 1: Pre-processing using Trimmomatic
 - Step 2: Assembly using Spades/Velvet (Spades assembly steps also involves assembling the plasmids seperately)
 - Step 3: Assembly evaluation using QUAST
 - Step 4: Contig reordering using ABACAS and Annotation using Prokka
 
-**Usage:**
-***
+
+## Usage for single local run:
 
 ```
 pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] [-config CONFIG] [-analysis ANALYSIS_NAME] [-o OUTPUT_FOLDER] 
@@ -91,3 +112,5 @@ ref_path = /home/apirani/bin/assembly_umich/bin/reference/KPNIH1/
 ```
 
 Here, the main header section [KPNIH1] represents the title for the reference genome. This title is required with the parameter -reference while running the pipeline for contig reordering step. 'ref_name' is the reference fasta filename saved under the path/dir 'ref_path'
+
+-->
