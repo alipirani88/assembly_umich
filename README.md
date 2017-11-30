@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# Microbial Genome De Novo Assembly Pipeline(PE)
-=======
 # Microbial Genome Assembly Pipeline
 
 ## Synopsis
@@ -21,11 +18,6 @@ Require testing: The pipeline can also be used to run ariba for finding resistan
 - [Customizing Config file](#customizing-config-file)
 - [Log](#log)
 - [Bonus Ducks](#bonus-ducks)
->>>>>>> 02fcbc58cf15a7a91eee3a88ef96345417763fb2
-
-
-
-
 
 <!---
 ## Steps:
