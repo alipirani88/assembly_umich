@@ -21,6 +21,23 @@ Require testing: The pipeline can also be used to run ariba for finding resistan
 
 ## Input
 
+To generate assembly jobs, you need a filename with fastq read sample names. The script only recognises one filename per line. To generate this filenames input, run the below command. Replace path-to- and PATH-to-save with the path to input reads directory and path to save filenames respectively
+
+```
+
+ls /path-to-/test_readsdir/*_R1_*.fastq.gz | awk -F'/' '{print $(NF)}' > /PATH-to-save/filenames
+
+```
+
+A script is provided with the pipeline, generate_jobs.py that will take this filenames and other arguments to generate assembly jobs. To generate assembly jobs for flux, run the below command:
+
+```
+/nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/scripts/generate_jobs.py -dir /path-to/test_readsdir/ -filenames filenames -out_dir /path-to-output-dir/ -pipeline new_assembly -type PE -email username@umich.edu -resources nodes=1:ppn=4,mem=47000mb,walltime=24:00:00
+
+```
+
+Note: Spades assembler requires higher memory cluster and the above resources would be sufficient to run the analysis.
+
 <!---
 ## Steps:
 
