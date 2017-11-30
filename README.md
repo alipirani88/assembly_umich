@@ -19,6 +19,8 @@ Require testing: The pipeline can also be used to run ariba for finding resistan
 - [Log](#log)
 - [Bonus Ducks](#bonus-ducks)
 
+## Input
+
 <!---
 ## Steps:
 
