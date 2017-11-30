@@ -29,6 +29,8 @@ ls /path-to-/test_readsdir/*_R1_*.fastq.gz | awk -F'/' '{print $(NF)}' > /PATH-t
 
 ```
 
+## Quick Start
+
 A script is provided with the pipeline, generate_jobs.py that will take this filenames and other arguments to generate assembly jobs. To generate assembly jobs for flux, run the below command:
 
 ```
