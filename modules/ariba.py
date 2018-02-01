@@ -13,7 +13,8 @@ from modules.log_modules import keep_logging
 def ariba_AMR(forward_paired, reverse_paired, output_folder, prefix, logger, Config):
     ariba_AMR_dir = output_folder + "/" + prefix + "_AMR"
     ariba_cmd = "%s/%s run --force --verbose %s %s %s %s" % (ConfigSectionMap("ariba", Config)['ariba_bin'], ConfigSectionMap("ariba", Config)['base_cmd'], ConfigSectionMap("ariba", Config)['ariba_amr_db'], forward_paired, reverse_paired, ariba_AMR_dir)
-    print ariba_cmd
+    #print ariba_cmd
+    keep_logging("Using Ariba DB path mentioned in config file: %s" % ConfigSectionMap("ariba", Config)['ariba_amr_db'], "Using Ariba DB path mentioned in config file: %s" % ConfigSectionMap("ariba", Config)['ariba_amr_db'], logger, 'info')
     try:
         keep_logging(ariba_cmd, ariba_cmd, logger, 'debug')
         call(ariba_cmd, logger)
@@ -25,7 +26,8 @@ def ariba_AMR(forward_paired, reverse_paired, output_folder, prefix, logger, Con
 def ariba_MLST(forward_paired, reverse_paired, output_folder, prefix, logger, Config):
     ariba_mlst_dir = output_folder + "/" + prefix + "_MLST"
     ariba_mlst_cmd = "%s/%s run --force --verbose %s %s %s %s" % (ConfigSectionMap("ariba", Config)['ariba_bin'], ConfigSectionMap("ariba", Config)['base_cmd'], ConfigSectionMap("ariba", Config)['ariba_mlst_db'], forward_paired, reverse_paired, ariba_mlst_dir)
-    print ariba_mlst_cmd
+    #print ariba_mlst_cmd
+    keep_logging("Using Ariba DB path mentioned in config file: %s" % ConfigSectionMap("ariba", Config)['ariba_mlst_db'], "Using Ariba DB path mentioned in config file: %s" % ConfigSectionMap("ariba", Config)['ariba_mlst_db'], logger, 'info')
     try:
         keep_logging(ariba_mlst_cmd, ariba_mlst_cmd, logger, 'debug')
         call(ariba_mlst_cmd, logger)

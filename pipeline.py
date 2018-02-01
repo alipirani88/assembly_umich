@@ -1,32 +1,4 @@
 __author__ = 'alipirani'
-
-
-########################################################################################################################################
-# pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] [-config CONFIG] [-analysis ANALYSIS_NAME] [-o OUTPUT_FOLDER] \
-# [-start_step START_STEP] [-end_step END_STEP] [-A ASSEMBLER] [-type TYPE] [-c CROP] [-reference REFERENCE]
-# optional arguments:
-#   -h, --help            show this help message and exit
-#
-# Required arguments:
-#   -f1 FILE_1            Paired End file 1
-#   -config CONFIG        Path to Config file
-#   -analysis ANALYSIS_NAME
-#                         Unique analysis name to save the results
-#   -o OUTPUT_FOLDER      Output Path ending with output directory name to save
-#                         the results
-#   -start_step START_STEP
-#                         Provide the start step. Only 1 works for now.
-#   -end_step END_STEP    Provide the end step. 2/3/4 All three works
-#   -A ASSEMBLER          Choose the assembler to assemble the sample reads.
-#                         Velvet Optimiser or Spades
-#   -type TYPE            Type of analysis: SE or PE
-#
-# Optional arguments:
-#   -f2 FILE_2            Paired End file 2
-#   -c CROP               choose crop value to crop the reads
-#   -reference REFERENCE  Provide a reference genome for Abacas Contig ordering
-#########################################################################################################################################
-
 """ Declaring required python modules """
 import argparse
 import ConfigParser
@@ -91,7 +63,7 @@ def pipeline(args, logger):
     java_check()
 
     """ Get Reference Genome Path """
-    if args.reference:
+    if args.reference and args.reference != "None":
         reference_genome_path = ConfigSectionMap(args.reference, Config)['ref_path'] + "/" + ConfigSectionMap(args.reference, Config)['ref_name']
 
     """ Set reads """
@@ -108,6 +80,18 @@ def pipeline(args, logger):
         do_assembly = "wga"
 
     """ Start the pipeline with the given start and end steps: """
+    if args.ariba == "AMR" and args.type == "PE":
+        keep_logging('Running Ariba AMR...', 'Running Ariba AMR...', logger, 'info')
+        ariba_AMR(Forward_read, Reverse_read, args.output_folder, args.analysis_name, logger, Config)
+    if args.ariba == "MLST" and args.type == "PE":
+        keep_logging('Running Ariba MLST...', 'Running Ariba MLST...', logger, 'info')
+        ariba_MLST(Forward_read, Reverse_read, args.output_folder, args.analysis_name, logger, Config)
+    if args.ariba == "both" and args.type == "PE":
+        keep_logging('Running Ariba AMR and MLST...', 'Running Ariba AMR and MLST...', logger, 'info')
+        ariba_AMR(Forward_read, Reverse_read, args.output_folder, args.analysis_name, logger, Config)
+        ariba_MLST(Forward_read, Reverse_read, args.output_folder, args.analysis_name, logger, Config)
+
+
     if args.start_step and args.end_step:
 
         if args.start_step == 1 and args.end_step == 1:
@@ -115,18 +99,18 @@ def pipeline(args, logger):
             keep_logging('START: Pre-processing step using Trimmomatic.', 'START: Pre-processing step using Trimmomatic.', logger, 'info')
             (forward_paired, reverse_paired, forward_unpaired, reverse_unpaired) = clean_reads(Forward_read, Reverse_read, args.output_folder, args.crop, logger, Config)
             keep_logging('END: Pre-processing step using Trimmomatic.', 'END: Pre-processing step using Trimmomatic.', logger, 'info')
-            if args.ariba == "AMR" and reverse_paired:
-                keep_logging('Running Ariba AMR...', 'Running Ariba AMR...', logger, 'info')
-                ariba_AMR(forward_paired, reverse_paired, args.output_folder, args.analysis_name, logger, Config)
-            if args.ariba == "MLST" and reverse_paired:
-                keep_logging('Running Ariba MLST...', 'Running Ariba MLST...', logger, 'info')
-                keep_logging('You chose steps 1 to 1: Pre-processing using Trimmomatic', 'You chose steps 1 to 1: Pre-processing using Trimmomatic', logger, 'info')
-                ariba_MLST(forward_paired, reverse_paired, args.output_folder, args.analysis_name, logger, Config)
-            if args.ariba == "both" and reverse_paired:
-                keep_logging('Running Ariba AMR and MLST...', 'Running Ariba AMR and MLST...', logger, 'info')
-                keep_logging('You chose steps 1 to 1: Pre-processing using Trimmomatic', 'You chose steps 1 to 1: Pre-processing using Trimmomatic', logger, 'info')
-                ariba_AMR(forward_paired, reverse_paired, args.output_folder, args.analysis_name, logger, Config)
-                ariba_MLST(forward_paired, reverse_paired, args.output_folder, args.analysis_name, logger, Config)
+            # if args.ariba == "AMR" and reverse_paired:
+            #     keep_logging('Running Ariba AMR...', 'Running Ariba AMR...', logger, 'info')
+            #     ariba_AMR(forward_paired, reverse_paired, args.output_folder, args.analysis_name, logger, Config)
+            # if args.ariba == "MLST" and reverse_paired:
+            #     keep_logging('Running Ariba MLST...', 'Running Ariba MLST...', logger, 'info')
+            #     keep_logging('You chose steps 1 to 1: Pre-processing using Trimmomatic', 'You chose steps 1 to 1: Pre-processing using Trimmomatic', logger, 'info')
+            #     ariba_MLST(forward_paired, reverse_paired, args.output_folder, args.analysis_name, logger, Config)
+            # if args.ariba == "both" and reverse_paired:
+            #     keep_logging('Running Ariba AMR and MLST...', 'Running Ariba AMR and MLST...', logger, 'info')
+            #     keep_logging('You chose steps 1 to 1: Pre-processing using Trimmomatic', 'You chose steps 1 to 1: Pre-processing using Trimmomatic', logger, 'info')
+            #     ariba_AMR(forward_paired, reverse_paired, args.output_folder, args.analysis_name, logger, Config)
+            #     ariba_MLST(forward_paired, reverse_paired, args.output_folder, args.analysis_name, logger, Config)
         elif args.start_step == 1 and args.end_step == 2:
             keep_logging('You chose steps 1 to 2: Pre-processing and Assembly', 'You chose steps 1 to 2: Pre-processing and Assembly', logger, 'info')
             keep_logging('START: Pre-processing step using Trimmomatic.', 'START: Pre-processing step using Trimmomatic.', logger, 'info')
