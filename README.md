@@ -133,7 +133,7 @@ for i in *.pbs; do bash $i; done
 ```
 -->
 
-
+<!---
 ## Customizing Config file:
 
 By default, the pipeline uses config file that comes with the pipeline. Make sure to edit this config file or copy it to your local system, edit it and provide path of this edited config file with -config argument.
@@ -190,6 +190,7 @@ Parameters for each tools can be customised under the 'tool_parameter' attribute
 
 For example, to change the minadapterlength parameter of Trimmomatic from 8 to 10, replace minadapterlength of 8 with suppose 10 and restart the pipeline.
 
+-->
 ## Log:
 
 The pipeline generates a log file following the naming convention: yyyy_mm_dd_hrs_mins_secs_analysisname.log.txt and tracks each event/command. The log file sections follow standard [Python logging conventions](https://docs.python.org/2/howto/logging.html): 
