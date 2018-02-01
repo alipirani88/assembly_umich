@@ -12,16 +12,12 @@ Require testing: The pipeline can also be used to run ariba for finding resistan
 ## Contents:
 
 - [Installation](#installation)
-- [Steps](#steps)
 - [Input](#input)
 - [Steps](#steps)
-- [Command line options](#command-line-options)
-- [Run pipeline on Compute cluster](#run-pipeline-on-compute-cluster)
 - [Quick Start](#quick-start)
 - [Output Files](#output-files)
 - [Customizing Config file](#customizing-config-file)
 - [Log](#log)
-- [Bonus Ducks](#bonus-ducks)
 
 ## Installation
 
@@ -111,10 +107,6 @@ or if you want to run it locally:
 for i in *.pbs; do bash $i; done
 ```
 -->
-
-## Output
-
-Results for each sample can be found in its own individual folder. Each sample folder will contain the assembly fasta file with a suffix \_l500_contigs.fasta and \_l500_plasmid_contigs.fasta. Prokka results can be found in \_prokka directory.
 
 
 ## Customizing Config file:
