@@ -51,7 +51,9 @@ ls /path-to-/test_readsdir/*_R1_*.fastq.gz | awk -F'/' '{print $(NF)}' > /PATH-t
 
 ## Steps
 
-Image here
+
+![alt tag](https://github.com/alipirani88/assembly_umich/blob/master/pipeline.png)
+
 
 
 
