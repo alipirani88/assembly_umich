@@ -66,11 +66,27 @@ nodes=1:ppn=4,mem=47000mb,walltime=24:00:00
 
 See option resources in scheduler section of [config](https://github.com/alipirani88/variant_calling_pipeline/blob/master/config) file. Detailed information in section [Customizing Config file](#customizing-config-file)
 
-- Generate and run assembly jobs for a set of PE reads with above pbs resources
+- Generate and run assembly jobs for a set of PE reads with above pbs resources. 
+
+
+```
+
+/nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich_dev/assembly_jobs.py -dir /scratch/esnitkin_fluxod/apirani/varcall_testing/reads_dir/ -out_dir /scratch/esnitkin_fluxod/apirani/varcall_testing/assembly_demo/ -pipeline assembly -type PE -email apirani@umich.edu -resources nodes=1:ppn=4,mem=47000mb,walltime=24:00:00
+
+```
+
+To run ariba for detecting AMR genes or MLST or both, run the above command with -ariba option. The possible options for ariba are: AMR, MLST, both. 
+
+Note: Make sure to set the ariba database in your config file.
 
 ```
 
 /nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich_dev/assembly_jobs.py -dir /scratch/esnitkin_fluxod/apirani/varcall_testing/reads_dir/ -out_dir /scratch/esnitkin_fluxod/apirani/varcall_testing/assembly_demo/ -pipeline assembly -type PE -email apirani@umich.edu -resources nodes=1:ppn=4,mem=47000mb,walltime=24:00:00 -ariba AMR
+
+or
+
+/nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich_dev/assembly_jobs.py -dir /scratch/esnitkin_fluxod/apirani/varcall_testing/reads_dir/ -out_dir /scratch/esnitkin_fluxod/apirani/varcall_testing/assembly_demo/ -pipeline assembly -type PE -email apirani@umich.edu -resources nodes=1:ppn=4,mem=47000mb,walltime=24:00:00 -ariba both
+
 
 ```
 
