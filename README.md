@@ -62,7 +62,7 @@ Image here
 ## Quick Start
 
 
-Assuming you want to assemble a few hundred samples and run the analysis in parallel on cluster(Time and memory efficient). The minimum pbs resources required for SPAdes assembler is: 
+Assuming you want to assemble a few hundred samples and run the analysis in parallel on cluster(Time and memory efficient). The minimum pbs cluster resources required for SPAdes assembler is: 
 
 ```
 nodes=1:ppn=4,mem=47000mb,walltime=24:00:00
