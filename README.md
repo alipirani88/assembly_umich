@@ -9,10 +9,10 @@ Require testing: The pipeline can also be used to run ariba for finding resistan
 -->
 
 
-## Contents: Wait till 2018!
+## Contents:
 
-- [Installation](#Installation)
-- [Steps](#Steps)
+- [Installation](#installation)
+- [Steps](#steps)
 - [Input](#input)
 - [Steps](#steps)
 - [Command line options](#command-line-options)
