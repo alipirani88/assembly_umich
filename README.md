@@ -94,11 +94,11 @@ The above command will generate and run assembly jobs for a set of PE reads resi
 
 The assembly will be placed in an individual folder generated for each sample in output directory. A log file for each sample will be generated and can be found in each sample folder inside the out directory. A single log file of this step will be generated in main output directory. For more information on log file prefix and convention, please refer [log](#log) section below.
 
-Generate a multiqc report for the assembly results.
+Generate a multiqc and ariba summary report for the assembly results.
 
 ```
 
-/nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich/modules/report.py -out_dir /scratch/esnitkin_fluxod/apirani/varcall_testing/assembly_demo/
+/nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich/modules/report.py -out_dir /scratch/esnitkin_fluxod/apirani/varcall_testing/assembly_demo/ -ariba_preset minimal
 
 ```
 
