@@ -2,12 +2,16 @@
 
 ## Synopsis
 
+This pipeline assembles Illumina PE/SE FastQ reads provided in a directory using SPAdes assembler, generates multiqc assembly report and can also be used to run ariba for finding resistance genes and MLST typing.
+<!---
 This pipeline takes Illumina PE/SE FastQ reads as input for various steps of pre-processing, assembly, evaluation, assembly improvement and annotation steps.
-
 Require testing: The pipeline can also be used to run ariba for finding resistance genes and MLST typing.
+-->
+
 
 ## Contents: Wait till 2018!
 
+- [Installation](#Installation)
 - [Steps](#Steps)
 - [Input](#input)
 - [Steps](#steps)
@@ -19,8 +23,27 @@ Require testing: The pipeline can also be used to run ariba for finding resistan
 - [Log](#log)
 - [Bonus Ducks](#bonus-ducks)
 
+## Installation
+
+Pending. 
+
+Ignore this if you are in snitkin lab. The dependencies are already installed in lab bin_group folder: 
+
+/nfs/esnitkin/bin_group/assembly_bin/. 
+
+Use the python version installed in:
+
+/nfs/esnitkin/bin_group/anaconda2/bin/python
+
 ## Input
 
+Input is a directory(-readsdir) containing SE/PE reads and a config file where all the configuration settings for the pipeline are set. This config file settings will be used universally on all samples available in readsdir. An example [config](https://github.com/alipirani88/assembly_umich/blob/master/config) file with default parameters are included in the pipeline folder. You can customize this config file and provide it with the -config argument.
+
+Detailed information in section [Customizing Config file](#customizing-config-file)
+
+Note: Apart from standard Miseq/Hiseq fastq naming extensions (R1_001_final.fastq.gz), other acceptable fastq extensions are: R1.fastq.gz/_R1.fastq.gz, 1_combine.fastq.gz, 1_sequence.fastq.gz, _forward.fastq.gz, _1.fastq.gz/.1.fastq.gz. 
+
+<!---
 To generate assembly jobs, you need a filename with fastq read sample names. The script only recognises one filename per line. To generate this filenames input, run the below command. Replace path-to- and PATH-to-save with the path to input reads directory and path to save filenames respectively
 
 ```
@@ -28,13 +51,44 @@ To generate assembly jobs, you need a filename with fastq read sample names. The
 ls /path-to-/test_readsdir/*_R1_*.fastq.gz | awk -F'/' '{print $(NF)}' > /PATH-to-save/filenames
 
 ```
+-->
+
+## Steps
+
+Image here
+
+
 
 ## Quick Start
 
-A script is provided with the pipeline, generate_jobs.py that will take this filenames and other arguments to generate assembly jobs. To generate assembly jobs for flux, run the below command:
+
+Assuming you want to assemble a few hundred samples and run the analysis in parallel on cluster(Time and memory efficient). The minimum pbs resources required for SPAdes assembler is: 
+
+```
+nodes=1:ppn=4,mem=47000mb,walltime=24:00:00
+```
+
+See option resources in scheduler section of [config](https://github.com/alipirani88/variant_calling_pipeline/blob/master/config) file. Detailed information in section [Customizing Config file](#customizing-config-file)
+
+- Generate and run assembly jobs for a set of PE reads with above pbs resources
+
+```
+/nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich_dev/assembly_jobs.py -dir /test_readsdir/ -out_dir /test_output/ -pipeline assembly -type PE -email username@umich.edu -resources nodes=1:ppn=4,mem=47000mb,walltime=24:00:00
+
+```
+
+The above command will generate and run assembly jobs for a set of PE reads residing in test_readsdir. The results will be saved in output directory test_output. The config file contains options for some frequently used reference genome to use with ABACAS for reordering. To know which reference genomes are included in config file, look up the [config]() file or check the help menu of the pipeline. 
+
+The assembly will be placed in an individual folder generated for each sample in output directory. A log file for each sample will be generated and can be found in each sample folder inside the out directory. A single log file of this step will be generated in main output directory. For more information on log file prefix and convention, please refer [log](#log) section below.
+
+
+<!---
+A script is provided with the pipeline, assembly_jobs.py that will take this filenames and other arguments to generate assembly jobs. To generate assembly jobs for flux, run the below command:
 
 ```
 /nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/scripts/generate_jobs.py -dir /path-to/test_readsdir/ -filenames filenames -out_dir /path-to-output-dir/ -pipeline new_assembly -type PE -email username@umich.edu -resources nodes=1:ppn=4,mem=47000mb,walltime=24:00:00
+
+/nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich_dev/generate_jobs.py -dir /scratch/esnitkin_fluxod/apirani/varcall_testing/reads_dir/ -out_dir /scratch/esnitkin_fluxod/apirani/varcall_testing/assembly_demo/ -pipeline new_assembly -type PE -email apirani@umich.edu -resources nodes=1:ppn=4,mem=47000mb,walltime=24:00:00
 
 ```
 
@@ -51,6 +105,7 @@ or if you want to run it locally:
 ```
 for i in *.pbs; do bash $i; done
 ```
+-->
 
 ## Output
 
@@ -70,8 +125,11 @@ The different steps of the pipeline are cleaning of reads using [Trimmomatic](ht
 ## Usage for single local run:
 
 ```
-pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] [-config CONFIG] [-analysis ANALYSIS_NAME] [-o OUTPUT_FOLDER] 
-[-start_step START_STEP] [-end_step END_STEP] [-A ASSEMBLER] [-type TYPE] [-c CROP] [-reference REFERENCE]
+
+usage: pipeline.py [-h] [-f1 FILE_1] [-f2 FILE_2] -config CONFIG -analysis
+                   ANALYSIS_NAME -o OUTPUT_FOLDER [-start_step START_STEP]
+                   [-end_step END_STEP] [-A ASSEMBLER] [-type TYPE] [-c CROP]
+                   [-reference REFERENCE] [-ariba ARIBA] [-assembly ASSEMBLY]
 
 Assembly pipeline for Illumina SE/PE data
 
@@ -96,6 +154,14 @@ Optional arguments:
   -f2 FILE_2            Paired End file 2
   -c CROP               choose crop value to crop the reads
   -reference REFERENCE  Provide a reference genome for Abacas Contig ordering
+  -ariba ARIBA          Run ariba AMR or MLST on clean reads. expected values:
+                        AMR/MLST/BOTH
+  -assembly ASSEMBLY    Select one of the following assembly options:
+                        "wga":Only Spades Whole Genome Assembly or "plasmid":
+                        Only Plasmid Assembly or "Both": Perform both wga and
+                        plasmid assembly. Default:wga Options:
+                        wga/plasmid/both
+
 ```      	
 
 The script can be invoked at any step provided it is supplied with valid -start_step and -end-step flags. 
