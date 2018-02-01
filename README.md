@@ -73,7 +73,8 @@ See option resources in scheduler section of [config](https://github.com/alipira
 - Generate and run assembly jobs for a set of PE reads with above pbs resources
 
 ```
-/nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich_dev/assembly_jobs.py -dir /test_readsdir/ -out_dir /test_output/ -pipeline assembly -type PE -email username@umich.edu -resources nodes=1:ppn=4,mem=47000mb,walltime=24:00:00
+
+/nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich_dev/assembly_jobs.py -dir /scratch/esnitkin_fluxod/apirani/varcall_testing/reads_dir/ -out_dir /scratch/esnitkin_fluxod/apirani/varcall_testing/assembly_demo/ -pipeline assembly -type PE -email apirani@umich.edu -resources nodes=1:ppn=4,mem=47000mb,walltime=24:00:00 -ariba AMR
 
 ```
 
@@ -81,6 +82,10 @@ The above command will generate and run assembly jobs for a set of PE reads resi
 
 The assembly will be placed in an individual folder generated for each sample in output directory. A log file for each sample will be generated and can be found in each sample folder inside the out directory. A single log file of this step will be generated in main output directory. For more information on log file prefix and convention, please refer [log](#log) section below.
 
+
+## Output
+
+Results for each sample can be found in its own individual folder. Each sample folder will contain the assembly fasta file with a suffix \_l500_contigs.fasta and \_l500_plasmid_contigs.fasta. Prokka results can be found in \_prokka directory.
 
 <!---
 A script is provided with the pipeline, assembly_jobs.py that will take this filenames and other arguments to generate assembly jobs. To generate assembly jobs for flux, run the below command:
@@ -110,6 +115,93 @@ for i in *.pbs; do bash $i; done
 ## Output
 
 Results for each sample can be found in its own individual folder. Each sample folder will contain the assembly fasta file with a suffix \_l500_contigs.fasta and \_l500_plasmid_contigs.fasta. Prokka results can be found in \_prokka directory.
+
+
+## Customizing Config file:
+
+By default, the pipeline uses config file that comes with the pipeline. Make sure to edit this config file or copy it to your local system, edit it and provide path of this edited config file with -config argument.
+
+```
+
+cp assembly_umich/config /Path-to-local/config_edit
+
+```
+
+The pipeline implements customisable variant calling configurations using config file. Config file can be customised to use your choice of tools and custom parameters.
+
+
+
+If you wish to run the jobs on cluster, make sure you change scheduler parameters in scheduler section shown below: for more information, visit [flux](http://arc-ts.umich.edu/systems-and-services/flux/) homepage.
+
+```
+
+[scheduler]
+resources: nodes=1:ppn=4,pmem=4000mb,walltime=24:00:00
+email: username@umich.edu
+queue: XXX
+flux_account: XXX
+notification: a
+
+```
+
+Every tool has its own *_bin option where you can set the folder name in which the tool resides. For example, in the below Trimmomatic section example, the Trimmomatic tool resides in /Trimmomatic/ folder that is set with trimmomatic_bin option which in itself resides in /nfs/esnitkin/bin_group/assembly_umich/ folder that was set in binbase option above.
+
+```
+[Trimmomatic]
+trimmomatic_bin: /Trimmomatic/
+adaptor_filepath: adapters/TruSeq3-Nextera_PE_combined.fa
+seed_mismatches: 2
+palindrome_clipthreshold: 30
+simple_clipthreshold: 10
+minadapterlength: 8
+keep_both_reads: true
+window_size: 4
+window_size_quality: 20
+minlength: 40
+headcrop_length: 0
+colon: :
+targetlength: 125
+crop_length: 40
+f_p: forward_paired.fq.gz
+f_up: forward_unpaired.fq.gz
+r_p: reverse_paired.fq.gz
+r_up: reverse_unpaired.fq.gz
+```
+
+Parameters for each tools can be customised under the 'tool_parameter' attribute of each tool in config file.
+
+
+For example, to change the minadapterlength parameter of Trimmomatic from 8 to 10, replace minadapterlength of 8 with suppose 10 and restart the pipeline.
+
+## Log:
+
+The pipeline generates a log file following the naming convention: yyyy_mm_dd_hrs_mins_secs_analysisname.log.txt and tracks each event/command. The log file sections follow standard [Python logging conventions](https://docs.python.org/2/howto/logging.html): 
+
+***INFO*** to print STDOUT messages; 
+
+***DEBUG*** to print commands ran by pipeline, 
+
+***ERROR*** to print STDERR messages and 
+
+***EXCEPTION*** to print an exception that occured while the pipeline was running.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <!---
 ## Steps:
