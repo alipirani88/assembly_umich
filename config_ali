@@ -32,12 +32,28 @@ unpaired = 1
 spades_bin = /SPAdes-3.10.1-Linux/bin/
 base_cmd = spades.py
 threads = 
-spades_parameters = --careful
+spades_parameters = --careful --sc
 plasmid_spades_parameters = --plasmid
 contigs_path = /spades_results/contigs.fasta
 scaffolds_path = /spades_results/scaffolds.fasta
 plasmid_contigs_path = /spades_plasmid_results/contigs.fasta
 plasmid_scaffolds_path = /spades_plasmid_results/scaffolds.fasta
+
+[bwa]
+bwa_bin: /bwa-0.7.12/
+cores: 8
+base_cmd: bwa
+algorithm: mem
+index: index
+RG_header: -R
+Mark_splithits: -M
+
+[bowtie]
+bowtie_bin: /bowtie2-2.2.6/
+cores: 8
+build_cmd: bowtie2-build
+align_cmd: bowtie2
+parameters: --non-deterministic --end-to-end
 
 [quast]
 quast_bin = /quast/
@@ -64,11 +80,16 @@ base_cmd = prokka
 prokka_parameters = -kingdom Bacteria --force --rfam
 
 [ariba]
-ariba_bin = /nfs/esnitkin/bin_group/anaconda3/bin/
+ariba_bin = /nfs/esnitkin/bin_group/ariba/scripts/
 base_cmd = ariba
 ariba_amr_db = /nfs/esnitkin/bin_group/ariba/database/custom_new/out.card.proteus.prepareref/
-ariba_mlst_db = /nfs/esnitkin/bin_group/ariba/database/MLST_db/KP_MLST/ref_db/
+ariba_mlst_db = /nfs/esnitkin/bin_group/ariba/database/MLST_db/Clostridium_difficile/ref_db/
+#ariba_bin = /nfs/esnitkin/bin_group/anaconda3/bin/
+
+#KPC MLST db
 #ariba_mlst_db = /nfs/esnitkin/bin_group/ariba/database/MLST_db/KP_MLST/ref_db/
+#Cdiff MLST db
+#ariba_mlst_db = /nfs/esnitkin/bin_group/ariba/database/MLST_db/Clostridium_difficile/ref_db/
 
 [bioawk]
 bioawk_bin = /bioawk/

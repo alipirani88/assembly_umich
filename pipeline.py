@@ -8,6 +8,7 @@ import os
 import sys
 import errno
 import glob
+import gzip
 from modules.log_modules import  *
 from modules.logging_subprocess import *
 from config_settings import ConfigSectionMap
@@ -23,6 +24,7 @@ from modules.qa_fastqc import *
 from modules.prokka import prokka
 from modules.ariba import ariba_AMR, ariba_MLST
 from datetime import datetime
+
 
 
 """ Command line argument parsing """
@@ -145,7 +147,7 @@ def pipeline(args, logger):
             keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
             #final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
             #final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
-            if args.reference:
+            if args.reference and args.reference != "None":
                 final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
                 #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
                 sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
@@ -200,7 +202,7 @@ def pipeline(args, logger):
             keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
             #final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
             #final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
-            if args.reference:
+            if args.reference and args.reference != "None":
                 final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
                 #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
                 sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
@@ -249,7 +251,7 @@ def pipeline(args, logger):
             keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
             #final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
             #final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
-            if args.reference:
+            if args.reference and args.reference != "None":
                 final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
                 #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
                 sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
@@ -290,7 +292,7 @@ def pipeline(args, logger):
         elif args.start_step == 4 and args.end_step == 4:
             final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
             final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
-            if args.reference:
+            if args.reference and args.reference != "None":
                 print "here"
                 final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
                 #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
@@ -395,7 +397,59 @@ def get_contigs(out_path, assembler):
         plasmid_scaffolds = out_path + ConfigSectionMap("spades")['plasmid_scaffolds_path']
         return contigs, scaffolds, plasmid_contigs, plasmid_scaffolds
 
+def prepare_readgroup(forward_read, aligner, logger):
+    keep_logging('Preparing ReadGroup Info', 'Preparing ReadGroup Info', logger, 'info')
+    samplename = os.path.basename(forward_read)
+    if forward_read.endswith(".gz"):
+        #output = gzip.open(forward_read, 'rb')
+        #firstLine = output.readline()
+        #split_field = re.split(r":",firstLine)
+        #id_name = split_field[1]
+        #id_name = id_name.strip()
+        #split_field = "\"" + "@RG" + "\\tID:" + split_field[1] + "\\tSM:" + samplename + "\\tLB:1\\tPL:Illumina" + "\""
+        #return split_field
+        output = gzip.open(forward_read, 'rb')
+        firstLine = output.readline()
+        if ":" in firstLine:
+            split_field = re.split(r":",firstLine)
+            id_name = split_field[1].rstrip()
+            id_name = id_name.rstrip()
+        # if aligner == "bowtie":
+        #     split_field = "--rg-id %s --rg SM:%s --rg LB:1 --rg PL:Illumina" % (split_field[1], samplename)
+        # elif aligner == "bwa":
+        #     split_field = "\"" + "@RG" + "\\tID:" + split_field[1] + "\\tSM:" + samplename + "\\tLB:1\\tPL:Illumina" + "\""
 
+        ###Pending
+        elif "/" in firstLine:
+            split_field = re.split(r"/",firstLine)
+            id_name = split_field[1].rstrip()
+            id_name = id_name.rstrip()
+            #id_name = split_field[1].rstrip()
+            #id_name = id_name.rstrip()
+            split_field = "\"" + "@RG" + "\\tID:" + id_name + "\\tSM:" + samplename + "\\tLB:1\\tPL:Illumina" + "\""
+        else:
+            id_name = "1"
+            split_field = "\"" + "@RG" + "\\tID:" + id_name + "\\tSM:" + samplename + "\\tLB:1\\tPL:Illumina" + "\""
+        if aligner == "bowtie":
+            split_field = "--rg-id %s --rg SM:%s --rg LB:1 --rg PL:Illumina" % (split_field[1], samplename)
+        elif aligner == "bwa":
+            split_field = "\"" + "@RG" + "\\tID:" + split_field[1] + "\\tSM:" + samplename + "\\tLB:1\\tPL:Illumina" + "\""
+        return split_field
+
+    elif forward_read.endswith(".fastq"):
+        output = open(forward_read, 'r')
+        firstLine = output.readline()
+        split_field = re.split(r":",firstLine)
+        split_field = "\"" + "@RG" + "\\tID:" + split_field[1] + "\\tSM:" + samplename + "\\tLB:1\\tPL:Illumina" + "\""
+        return split_field
+
+    elif forward_read.endswith(".fq"):
+        ###
+        output = open(forward_read, 'r')
+        firstLine = output.readline()
+        split_field = re.split(r":",firstLine)
+        split_field = "\"" + "@RG" + "\\tID:" + split_field[1] + "\\tSM:" + samplename + "\\tLB:1\\tPL:Illumina" + "\""
+        return split_field
 """ End: Check Subroutines """
 
 
@@ -426,6 +480,19 @@ if __name__ == '__main__':
     Config = ConfigParser.ConfigParser()
     Config.read(config_file)
     pipeline(args, logger)
+    # final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
+    # forward_paired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['f_p']
+    # reverse_paired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['r_p']
+    # forward_unpaired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['f_up']
+    # reverse_unpaired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['r_up']
+    # split_field = prepare_readgroup(forward_paired, "bwa", logger)
+    # base_cmd = ConfigSectionMap("bin_path", Config)['binbase'] + "/" + ConfigSectionMap("bowtie", Config)[
+    #     'bowtie_bin'] + "/" + ConfigSectionMap("bowtie", Config)['align_cmd']
+    # files_to_delete = ""
+    # parameters = ConfigSectionMap("bowtie", Config)['parameters']
+    #
+    # align_bowtie(base_cmd, forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.output_folder, final_l500_contig,
+    #              split_field, args.analysis_name, files_to_delete, logger, Config, args.type, parameters)
     keep_logging('End: Pipeline', 'End: Pipeline', logger, 'info')
     time_taken = datetime.now() - start_time_2
     keep_logging('Total Time taken: {}'.format(time_taken), 'Total Time taken: {}'.format(time_taken), logger, 'info')
