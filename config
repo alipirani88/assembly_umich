@@ -1,3 +1,10 @@
+# Set which tools to use in pipeline:
+[pipeline]
+# Options for Aligner:bwa / smalt / bowtie
+aligner: bowtie
+# Options for variant_caller: samtoolswithpostalignbam / gatkhaplotypecaller /samtools
+variant_caller: samtools
+
 [bin_path]
 binbase = /nfs/esnitkin/bin_group/assembly_bin/
 
@@ -32,28 +39,12 @@ unpaired = 1
 spades_bin = /SPAdes-3.10.1-Linux/bin/
 base_cmd = spades.py
 threads = 
-spades_parameters = --careful --sc
+spades_parameters = --careful
 plasmid_spades_parameters = --plasmid
 contigs_path = /spades_results/contigs.fasta
 scaffolds_path = /spades_results/scaffolds.fasta
 plasmid_contigs_path = /spades_plasmid_results/contigs.fasta
 plasmid_scaffolds_path = /spades_plasmid_results/scaffolds.fasta
-
-[bwa]
-bwa_bin: /bwa-0.7.12/
-cores: 8
-base_cmd: bwa
-algorithm: mem
-index: index
-RG_header: -R
-Mark_splithits: -M
-
-[bowtie]
-bowtie_bin: /bowtie2-2.2.6/
-cores: 8
-build_cmd: bowtie2-build
-align_cmd: bowtie2
-parameters: --non-deterministic --end-to-end
 
 [quast]
 quast_bin = /quast/
@@ -79,17 +70,41 @@ prokka_bin = /prokka-1.11/bin/
 base_cmd = prokka
 prokka_parameters = -kingdom Bacteria --force --rfam
 
+[picard]
+picard_bin: /picard-tools-2.5.0/
+base_cmd: picard.jar
+
+[pilon]
+pilon_bin: /pilon-1.23/
+base_cmd: pilon-1.23.jar
+
+[bowtie]
+bowtie_bin: /bowtie2-2.2.6/
+cores: 8
+build_cmd: bowtie2-build
+align_cmd: bowtie2
+parameters: -k 1 --non-deterministic --end-to-end
+
+[samtools]
+samtools_bin: /samtools-1.2/
+base_cmd: samtools
+#minimum mapping quality
+#change parameter S to -t SP and D to -t DP
+mpileup_parameters: -ug -f
+faiindex: faidx
+#-q30 -B -E -C50
+
 [ariba]
-ariba_bin = /nfs/esnitkin/bin_group/ariba/scripts/
+ariba_bin = /nfs/esnitkin/bin_group/anaconda3/bin/
 base_cmd = ariba
 ariba_amr_db = /nfs/esnitkin/bin_group/ariba/database/custom_new/out.card.proteus.prepareref/
-ariba_mlst_db = /nfs/esnitkin/bin_group/ariba/database/MLST_db/Clostridium_difficile/ref_db/
-#ariba_bin = /nfs/esnitkin/bin_group/anaconda3/bin/
-
-#KPC MLST db
-#ariba_mlst_db = /nfs/esnitkin/bin_group/ariba/database/MLST_db/KP_MLST/ref_db/
-#Cdiff MLST db
+ariba_mlst_db = /nfs/esnitkin/bin_group/ariba/database/MLST_db/KP_MLST/ref_db/
 #ariba_mlst_db = /nfs/esnitkin/bin_group/ariba/database/MLST_db/Clostridium_difficile/ref_db/
+
+[bedtools]
+bedtools_bin: /bedtools2-master/bin/
+base_cmd: bedtools
+version_for_coverage: /version_for_coverage/
 
 [bioawk]
 bioawk_bin = /bioawk/
@@ -129,3 +144,16 @@ ref_path = /nfs/esnitkin/bin_group/variant_calling_bin/reference/CFT073/
 [paris]
 ref_name = Paris.fna
 ref_path = /nfs/esnitkin/bin_group/variant_calling_bin/reference/paris/
+
+##Steph Lab Confirmation Project
+[MRSA_USA300_FPR3757]
+# Name of reference genome fasta file.
+ref_name: MRSA_USA300_FPR3757.fasta
+# path to the reference genome fasta file.
+ref_path: /nfs/esnitkin/bin_group/variant_calling_bin/reference/MRSA_USA300_FPR3757/
+
+[MRSA_Newman]
+# Name of reference genome fasta file.
+ref_name: MRSA_Newman.fasta
+# path to the reference genome fasta file.
+ref_path: /nfs/esnitkin/bin_group/variant_calling_bin/reference/MRSA_Newman/

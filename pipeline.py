@@ -1,7 +1,6 @@
 __author__ = 'alipirani'
 """ Declaring required python modules """
 import argparse
-import ConfigParser
 import subprocess
 import re
 import os
@@ -9,9 +8,12 @@ import sys
 import errno
 import glob
 import gzip
+from datetime import datetime
+import ConfigParser
+from config_settings import ConfigSectionMap
+from datetime import *
 from modules.log_modules import  *
 from modules.logging_subprocess import *
-from config_settings import ConfigSectionMap
 from modules.trimmomatic import *
 from modules.assembly import *
 from modules.qa_fastqc import qa_fastqc
@@ -23,9 +25,11 @@ from modules.abacas import *
 from modules.qa_fastqc import *
 from modules.prokka import prokka
 from modules.ariba import ariba_AMR, ariba_MLST
-from datetime import datetime
-
-
+from modules.bowtie import *
+from modules.samtools import *
+from modules.picard import *
+from modules.bedtools import *
+from modules.pilon import *
 
 """ Command line argument parsing """
 def parser():
@@ -45,6 +49,12 @@ def parser():
     optional.add_argument('-reference', action='store', dest="reference", help='Provide a reference genome for Abacas Contig ordering')
     optional.add_argument('-ariba', action='store', dest="ariba", help='Run ariba AMR or MLST on clean reads. expected values: AMR/MLST/BOTH')
     optional.add_argument('-assembly', action='store', dest="assembly", help='Select one of the following assembly options:\n\"wga\":Only Spades Whole Genome Assembly or\n\"plasmid\": Only Plasmid Assembly or\n\"Both\": Perform both wga and plasmid assembly. Default:wga Options: wga/plasmid/both')
+    optional.add_argument('-downsample', action='store', dest="downsample",
+                          help='yes/no: Downsample Reads data to default depth of 100X or user specified depth')
+    optional.add_argument('-coverage_depth', action='store', dest="coverage_depth",
+                          help='Downsample Reads to this user specified depth')
+
+
     return parser
 
 # Main Pipeline
@@ -72,14 +82,26 @@ def pipeline(args, logger):
     if args.type != "PE":
         Reverse_read = "None"
         Forward_read = args.file_1
+
     else:
         Forward_read = args.file_1
         Reverse_read = args.file_2
+
 
     if args.assembly:
         do_assembly = args.assembly
     else:
         do_assembly = "wga"
+
+    """ Downsample original data to default/ user-specified coverage"""
+    if args.downsample == "yes":
+        read1, read2 = downsample(args, logger)
+        Forward_read = read1
+        Reverse_read = read2
+        print "Using downsampled forward reads %s" % Forward_read
+        print "Using downsampled reverse reads %s" % Reverse_read
+
+
 
     """ Start the pipeline with the given start and end steps: """
     if args.ariba == "AMR" and args.type == "PE":
@@ -92,8 +114,6 @@ def pipeline(args, logger):
         keep_logging('Running Ariba AMR and MLST...', 'Running Ariba AMR and MLST...', logger, 'info')
         ariba_AMR(Forward_read, Reverse_read, args.output_folder, args.analysis_name, logger, Config)
         ariba_MLST(Forward_read, Reverse_read, args.output_folder, args.analysis_name, logger, Config)
-
-
     if args.start_step and args.end_step:
 
         if args.start_step == 1 and args.end_step == 1:
@@ -140,13 +160,23 @@ def pipeline(args, logger):
             keep_logging('END: Pre-processing step using Trimmomatic.', 'END: Pre-processing step using Trimmomatic.', logger, 'info')
             keep_logging('START: Starting Assembly using {}'.format(args.assembler), 'START: Starting Assembly using {}'.format(args.assembler), logger, 'info')
             (contigs, scaffolds, plasmid_contigs, plasmid_scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, args.output_folder, logger, Config, do_assembly)
+            contigs = args.output_folder + "spades_results" + "/contigs.fasta"
+            scaffolds = args.output_folder + "spades_results" + "/scaffolds.fasta"
+            plasmid_contigs = args.output_folder + "spades_plasmid_results" + "/contigs.fasta"
+            plasmid_scaffolds = args.output_folder + "spades_plasmid_results" + "/contigs.fasta"
             keep_logging('END: Starting Assembly using {}'.format(args.assembler), 'END: Starting Assembly using {}'.format(args.assembler), logger, 'info')
-            (final_l500_contig, final_l500_plasmid_contig) = bioawk(contigs, plasmid_contigs, args.output_folder, args.analysis_name, logger, Config, do_assembly)
+
+            # Comment out the Bioawk step. Bioawk is added in Pilon step.
+            #(final_l500_contig, final_l500_plasmid_contig) = bioawk(contigs, plasmid_contigs, args.output_folder, args.analysis_name, logger, Config, do_assembly)
+            reference = "%s/spades_results/contigs.fasta" % (args.output_folder)
+            # Adding Pilon to the pipeline
+            (final_l500_contig, final_l500_plasmid_contig) = run_pilon(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, reference)
             keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger, 'info')
             quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
             keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
             #final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
             #final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
+
             if args.reference and args.reference != "None":
                 final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
                 #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
@@ -186,12 +216,10 @@ def pipeline(args, logger):
             keep_logging('You chose steps 2 to 3: Assembly and Evaluation', 'You chose steps 2 to 3: Assembly and Evaluation', logger, 'info')
             (contigs, scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, args.output_folder, do_assembly)
             quast_evaluation(args.output_folder, contigs, scaffolds, plasmid_contigs, plasmid_scaffolds)
-
         elif args.start_step == 2 and args.end_step == 2:
             keep_logging('START: Starting Assembly using {}'.format(args.assembler), 'START: Starting Assembly using {}'.format(args.assembler), logger, 'info')
             (contigs, scaffolds, plasmid_contigs, plasmid_scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, args.output_folder, logger, Config, do_assembly)
             keep_logging('END: Starting Assembly using {}'.format(args.assembler), 'END: Starting Assembly using {}'.format(args.assembler), logger, 'info')
-
         elif args.start_step == 2 and args.end_step == 4:
             keep_logging('START: Starting Assembly using {}'.format(args.assembler), 'START: Starting Assembly using {}'.format(args.assembler), logger, 'info')
             (contigs, scaffolds, plasmid_contigs, plasmid_scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, args.output_folder, logger, Config, do_assembly)
@@ -237,14 +265,10 @@ def pipeline(args, logger):
             plasmid_first_part = args.analysis_name + "_plasmid"
             final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part, logger, Config)
             keep_logging('Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), 'Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), logger, 'debug')
-
-
-
         elif args.start_step == 3 and args.end_step == 3:
             keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger, 'info')
             quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
             keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
-
         elif args.start_step == 3 and args.end_step == 4:
             keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger, 'info')
             quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
@@ -286,9 +310,6 @@ def pipeline(args, logger):
             plasmid_first_part = args.analysis_name + "_plasmid"
             final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part, logger, Config)
             keep_logging('Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), 'Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), logger, 'debug')
-
-
-
         elif args.start_step == 4 and args.end_step == 4:
             final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
             final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
@@ -328,9 +349,11 @@ def pipeline(args, logger):
             plasmid_first_part = args.analysis_name + "_plasmid"
             final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part, logger, Config)
             keep_logging('Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), 'Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), logger, 'debug')
-
         else:
             keep_logging('ERROR: Please provide start and end steps for the pipeline.', 'ERROR: Please provide start and end steps for the pipeline.', logger, 'exception')
+
+
+
 
 
 """ Start: Check Subroutines """
@@ -338,7 +361,6 @@ def pipeline(args, logger):
 """ Usage Message: """
 def usage():
     print "Usage: pipeline.py [-h] [-v] [-f1 FILE_1] [-f2 FILE_2] [-o OUTPUT_FOLDER] [-start_step START] [-end_step END] [--qa] [-A Assembler] [--err] \n"
-
 
 """ Check Java Availability: """
 def java_check():
@@ -348,7 +370,6 @@ def java_check():
         print "Unable to find a java runtime environment. The pipeline requires java 6 or later."
     else:
         print "Java Availability Check completed ...\n\n" + jd
-
 
 """ Make sure input raw reads files exists at given location. """
 def file_exists(path1, path2):
@@ -363,7 +384,6 @@ def file_exists(path1, path2):
             print "The input file " + file_basename + " does not exists. \nPlease provide another file.\n"
             exit()
 
-
 """ Make sure the output folder exists or create at given path """
 def make_sure_path_exists(out_path):
     try:
@@ -372,7 +392,6 @@ def make_sure_path_exists(out_path):
         if exception.errno != errno.EEXIST:
             print "Errors in output folder path! please change the output path or analysis name\n"
             exit()
-
 
 """ Prepare the paths for clean reads when all the input files exists. """
 def prepare_cleanreadsinput():
@@ -383,8 +402,7 @@ def prepare_cleanreadsinput():
     reverse_unpaired = out_name + "reverse_unpaired.fq.gz"
     return forward_paired, forward_unpaired, reverse_paired, reverse_unpaired
 
-
-""" Set appropriate path for contigs/scaffolds fasta files. Needed only when quast or reapr runs individually. """
+""" Set appropriate path for contigs/scaffolds fasta files. Needed only when quast runs individually. """
 def get_contigs(out_path, assembler):
     if assembler == "velvet":
         contigs = out_path + ConfigSectionMap("velvet")['contigs_path']
@@ -397,6 +415,77 @@ def get_contigs(out_path, assembler):
         plasmid_scaffolds = out_path + ConfigSectionMap("spades")['plasmid_scaffolds_path']
         return contigs, scaffolds, plasmid_contigs, plasmid_scaffolds
 
+""" End: Check Subroutines """
+
+""" Methods """
+
+""" Downsample Raw reads data to Default 100 X or user specified coverage """
+def downsample(args, logger):
+    print "Downsampling Coverage Depth to: %s" % args.coverage_depth
+
+    print "Running: /nfs/esnitkin/bin_group/variant_calling_bin/mash sketch -o /tmp/sketch_out -k 32 -m 3 -r %s" % args.file_1
+
+    mash_cmd = "/nfs/esnitkin/bin_group/variant_calling_bin/mash sketch -o /tmp/sketch_out -k 32 -m 3 -r %s >& /tmp/sketch_stdout" % args.file_1
+    os.system(mash_cmd)
+
+    with open("/tmp/sketch_stdout", 'rU') as file_open:
+        for line in file_open:
+            if line.startswith('Estimated genome size:'):
+                gsize = float(line.split(': ')[1].strip())
+            if line.startswith('Estimated coverage:'):
+                est_cov = float(line.split(': ')[1].strip())
+    file_open.close()
+
+    print "Estimated Genome Size: %s" % gsize
+
+    seqtk_check = "/nfs/esnitkin/bin_group/seqtk/seqtk fqchk -q3 %s > /tmp/%s_fastqchk.txt" % (
+    args.file_1, os.path.basename(args.file_1))
+    print "Running: %s" % seqtk_check
+    os.system(seqtk_check)
+
+    with open("/tmp/%s_fastqchk.txt" % os.path.basename(args.file_1), 'rU') as file_open:
+        for line in file_open:
+            if line.startswith('min_len'):
+                line_split = line.split(';')
+                min_len = line_split[0].split(': ')[1]
+                max_len = line_split[1].split(': ')[1]
+                avg_len = line_split[2].split(': ')[1]
+            if line.startswith('ALL'):
+                line_split = line.split('\t')
+                total_bases = int(line_split[1]) * 2
+    file_open.close()
+
+    print "Average Read Length: %s" % avg_len
+    print "Total number of bases in fastq: %s" % total_bases
+
+    ori_coverage_depth = int(total_bases / gsize)
+    print "Original Covarage Depth: %s x" % ori_coverage_depth
+
+    if not args.coverage_depth and ori_coverage_depth > 100:
+        # Downsample to 100
+        factor = float(100 / ori_coverage_depth)
+        print round(factor, 3)
+    else:
+        factor = float(float(args.coverage_depth) / ori_coverage_depth)
+        print round(factor, 3)
+
+    proc = sp.Popen(["nproc"], stdout=sp.PIPE, shell=True)
+    (nproc, err) = proc.communicate()
+    nproc = nproc.strip()
+
+    r1_sub = "/tmp/%s" % os.path.basename(args.file_1)
+
+    os.system("/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+        args.file_1, factor, nproc, os.path.basename(args.file_1)))
+    if args.file_2:
+        r2_sub = "/tmp/%s" % os.path.basename(args.file_2)
+        os.system("/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+            args.file_2, factor, nproc, os.path.basename(args.file_2)))
+    else:
+        r2_sub = "None"
+    return r1_sub, r2_sub
+
+""" Prepare ReadGroup option for BWA alignment """
 def prepare_readgroup(forward_read, aligner, logger):
     keep_logging('Preparing ReadGroup Info', 'Preparing ReadGroup Info', logger, 'info')
     samplename = os.path.basename(forward_read)
@@ -450,8 +539,175 @@ def prepare_readgroup(forward_read, aligner, logger):
         split_field = re.split(r":",firstLine)
         split_field = "\"" + "@RG" + "\\tID:" + split_field[1] + "\\tSM:" + samplename + "\\tLB:1\\tPL:Illumina" + "\""
         return split_field
-""" End: Check Subroutines """
 
+""" Prepare Reference Genome Index for Bowtie, samtools and Picard """
+def create_index(reference,ref_index_suffix1, ref_index_suffix2, ref_index_suffix3, ref_index_suffix4, ref_index_suffix5):
+    aligner = ConfigSectionMap("pipeline", Config)['aligner']
+    keep_logging('Creating Index of reference fasta file for {} aligner.'.format(aligner), 'Creating Index of reference fasta file for {} aligner'.format(aligner), logger, 'info')
+    if aligner == "bwa":
+        cmd = "%s/%s/%s %s %s" % (ConfigSectionMap("bin_path", Config)['binbase'], ConfigSectionMap("bwa", Config)['bwa_bin'], ConfigSectionMap("bwa", Config)['base_cmd'], ConfigSectionMap("bwa", Config)['index'], reference)
+        keep_logging(cmd, cmd, logger, 'debug')
+        try:
+            call(cmd, logger)
+        except sp.CalledProcessError:
+                keep_logging('Error in {} Indexer. Exiting.'.format(aligner), 'Error in {} Indexer. Exiting.'.format(aligner), logger, 'exception')
+                sys.exit(1)
+        if not os.path.isfile(ref_index_suffix1):
+            keep_logging('The {} reference index files were not created properly. Please try to create the index files again or manually.'.format(aligner), 'The {} reference index files were not created properly. Please try to create the index files again or manually.'.format(aligner), logger, 'exception')
+    elif aligner == "bowtie":
+        cmd = "%s/%s/%s %s %s" % (ConfigSectionMap("bin_path", Config)['binbase'], ConfigSectionMap("bowtie", Config)['bowtie_bin'], ConfigSectionMap("bowtie", Config)['build_cmd'], reference, reference)
+        keep_logging(cmd, cmd, logger, 'debug')
+        try:
+            call(cmd, logger)
+        except sp.CalledProcessError:
+                keep_logging('Error in {} Indexer. Exiting.'.format(aligner), 'Error in {} Indexer. Exiting.'.format(aligner), logger, 'exception')
+                sys.exit(1)
+        if not os.path.isfile(ref_index_suffix1):
+            keep_logging('The {} reference index files were not created properly. Please try to create the index files again or manually.'.format(aligner), 'The {} reference index files were not created properly. Please try to create the index files again or manually.'.format(aligner), logger, 'exception')
+
+    else:
+        print "Different Aligner in config file"
+
+def create_fai_index(reference, ref_fai_index):
+    keep_logging('Creating FAI Index using Samtools.', 'Creating FAI Index using Samtools.', logger, 'info')
+    cmd = "%s/%s/%s %s %s" % (ConfigSectionMap("bin_path", Config)['binbase'], ConfigSectionMap("samtools", Config)['samtools_bin'], ConfigSectionMap("samtools", Config)['base_cmd'], ConfigSectionMap("samtools", Config)['faiindex'], reference)
+    keep_logging(cmd, cmd, logger, 'debug')
+    try:
+        call(cmd, logger)
+    except sp.CalledProcessError:
+        keep_logging('Error in Samtools FAI Indexing step. Exiting.', 'Error in Samtools FAI Indexing step. Exiting.', logger, 'exception')
+        sys.exit(1)
+
+
+    if not os.path.isfile(ref_fai_index):
+        keep_logging('The reference fai index file {} was not created properly.\n Please try to create the samtools fai index files manually. \n'.format(ref_fai_index), 'The reference fai index file {} was not created properly.\n Please try to create the samtools fai index files manually. \n'.format(ref_fai_index), logger, 'exception')
+    else:
+        keep_logging('Samtools Fai Index file created.', 'Samtools Fai Index file created.', logger, 'info')
+
+def picard_seqdict(dict_name, reference):
+    #dict_name = os.path.splitext(os.path.basename(reference_filename))[0] + ".dict"
+    keep_logging('Creating Sequence Dictionary using Picard.', 'Creating Sequence Dictionary using Picard.', logger, 'info')
+    # cmd = "java -jar %s/%s/%s CreateSequenceDictionary REFERENCE=%s OUTPUT=%s/%s" % (ConfigSectionMap("bin_path", Config)['binbase'], ConfigSectionMap("picard", Config)['picard_bin'], ConfigSectionMap("picard", Config)['base_cmd'], reference, reference, dict_name)
+
+    cmd = "java -jar %s/%s/%s CreateSequenceDictionary REFERENCE=%s OUTPUT=%s/%s" % (
+    ConfigSectionMap("bin_path", Config)['binbase'], ConfigSectionMap("picard", Config)['picard_bin'],
+    ConfigSectionMap("picard", Config)['base_cmd'], reference, os.path.dirname(reference), dict_name)
+
+    keep_logging(cmd, cmd, logger, 'debug')
+    try:
+        call(cmd, logger)
+    except sp.CalledProcessError:
+        keep_logging('Error in Picard Sequence Dictionary creation step. Exiting.', 'Error in Picard Sequence Dictionary creation step. Exiting.', logger, 'exception')
+        sys.exit(1)
+
+""" samtools: Post-Alignment SAM/BAM conversion, sort, index """
+def prepare_bam(out_sam, out_path, analysis, files_to_delete, logger, Config):
+    out_bam = samtobam(out_sam, out_path, analysis, files_to_delete, logger, Config)
+    out_sort_bam = sort_bam(out_bam, out_path, analysis, logger, Config)
+    #files_to_delete.append(out_sort_bam)
+    out_marked_bam = markduplicates(out_sort_bam, out_path, analysis, files_to_delete, logger, Config)
+    out_sort_bam = sort_bam(out_marked_bam, out_path, analysis, logger, Config)
+    index_bam(out_sort_bam, out_path, logger, Config)
+    if not os.path.isfile(out_sort_bam):
+        keep_logging('Error in SAM/BAM conversion, sort, index. Exiting.', 'Error in SAM/BAM conversion, sort, index. Exiting.', logger, 'exception')
+        exit()
+    else:
+        return out_sort_bam
+
+def post_align(out_sam, reference):
+    keep_logging('START: Post-Alignment using SAMTOOLS, PICARD etc...', 'START: Post-Alignment using SAMTOOLS, PICARD etc...', logger, 'info')
+    out_sorted_bam = prepare_bam(out_sam, args.output_folder, args.analysis_name, files_to_delete, logger, Config)
+    keep_logging('END: Post-Alignment using SAMTOOLS, PICARD etc...', 'END: Post-Alignment using SAMTOOLS, PICARD etc...', logger, 'info')
+    #out_sorted_bam = "%s/%s_aln_sort.bam" % (args.output_folder, args.analysis_name)
+    keep_logging('START: Creating BedGraph Coverage', 'START: Creating BedGraph Coverage', logger, 'info')
+    bedgraph_coverage(out_sorted_bam, args.output_folder, args.analysis_name, reference, logger, Config)
+    only_unmapped_positions_file = bedtools(out_sorted_bam, args.output_folder, args.analysis_name, logger, Config)
+    keep_logging('END: Creating BedGraph Coverage', 'END: Creating BedGraph Coverage', logger, 'info')
+    return out_sorted_bam
+
+def file_exists_for_alignment(path1, path2, reference):
+
+
+    if not os.path.isfile(reference):
+        file_basename = os.path.basename(reference)
+        keep_logging('The reference fasta file {} does not exists. Please provide another with full path file with full path or check the files path.\n'.format(file_basename), 'The reference fasta file {} does not exists. Please provide another file or check the files path.\n'.format(file_basename), logger, 'exception')
+        exit()
+    if ConfigSectionMap("pipeline", Config)['aligner'] == "bwa":
+        ref_index_suffix1 = reference + ".bwt"
+        ref_index_suffix2 = reference + ".amb"
+        ref_index_suffix3 = reference + ".ann"
+        ref_index_suffix4 = reference + ".sa"
+        ref_index_suffix5 = reference + ".pac"
+    elif ConfigSectionMap("pipeline", Config)['aligner'] == "bowtie":
+        ref_index_suffix1 = reference + ".1.bt2"
+        ref_index_suffix2 = reference + ".2.bt2"
+        ref_index_suffix3 = reference + ".3.bt2"
+        ref_index_suffix4 = reference + ".4.ebwt"
+        ref_index_suffix5 = reference + ".rev.1.bt2"
+        ref_index_suffix6 = reference + ".rev.2.bt2"
+    if not os.path.isfile(ref_index_suffix1):
+        keep_logging('The reference index files given below does not exists:\n {}\n {}\n {}\n {}\n {}'.format(ref_index_suffix1, ref_index_suffix2, ref_index_suffix3, ref_index_suffix4, ref_index_suffix5), 'The reference index files given below does not exists:\n {}\n {}\n {}\n {}\n {}'.format(ref_index_suffix1, ref_index_suffix2, ref_index_suffix3, ref_index_suffix4, ref_index_suffix5), logger, 'warning')
+        create_index(reference, ref_index_suffix1, ref_index_suffix2, ref_index_suffix3, ref_index_suffix4, ref_index_suffix5)
+    else:
+        keep_logging('Index file already exists.', 'Index file already exists.', logger, 'info')
+
+    ref_fai_index = reference + ".fai"
+    if not os.path.isfile(ref_fai_index):
+        keep_logging('The reference fai index file {} required for samtools does not exists.'.format(ref_fai_index), 'The reference fai index file {} required for samtools does not exists.'.format(ref_fai_index), logger, 'warning')
+        create_fai_index(reference, ref_fai_index)
+    else:
+        keep_logging('Samtools fai Index file already exists.', 'Samtools fai Index file already exists.', logger, 'info')
+
+    dict_name = os.path.splitext(os.path.basename(reference))[0] + ".dict"
+    if not os.path.isfile("%s" % reference + "/" + dict_name):
+        keep_logging('The reference seq dict file {} required for GATK and PICARD does not exists.'.format(dict_name), 'The reference seq dict file {} required for GATK and PICARD does not exists.'.format(dict_name), logger, 'warning')
+        picard_seqdict(dict_name, reference)
+    else:
+        keep_logging('The reference seq dict file required for GATK and PICARD exists.', 'The reference seq dict file required for GATK and PICARD exists.', logger, 'info')
+
+def run_pilon(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, reference):
+    # Post assembly improvements - Actively developing this step.
+    # Changes Added on August 26 2019
+    split_field = prepare_readgroup(forward_paired, "bwa", logger)
+    files_to_delete = []
+
+    # Check if FASTQ files exists; Generate Reference Genome index for alignments
+    if args.type != "PE" and args.type != "BAM":
+        reverse_raw = "None"
+        file_exists_for_alignment(args.file_1, args.file_1, reference)
+    elif args.type != "PE" and args.type != "SE":
+        print "BAM type... Not Integrated... continue"
+    else:
+        file_exists_for_alignment(args.file_1, args.file_2, reference)
+
+    # Align reads to reference genome
+
+    # Prepare Aligner base command
+    base_cmd = ConfigSectionMap("bin_path", Config)['binbase'] + "/" + ConfigSectionMap("bowtie", Config)[
+        'bowtie_bin'] + "/" + ConfigSectionMap("bowtie", Config)['align_cmd']
+    files_to_delete = ""
+    parameters = ConfigSectionMap("bowtie", Config)['parameters']
+
+    # Align reads using Bowtie
+    out_sam = align_bowtie(base_cmd, forward_paired, reverse_paired, forward_unpaired, reverse_unpaired,
+                           args.output_folder, reference,
+                           split_field, args.analysis_name, files_to_delete, logger, Config, args.type, parameters)
+
+    # Post-process BAM files: Sort, index and run mark duplicates
+    out_sorted_bam = post_align(out_sam, reference)
+
+    out_sorted_bam = "%s/%s_aln_sort.bam" % (args.output_folder, args.analysis_name)
+    print out_sorted_bam
+
+    polished_pilon_fasta = pilon(out_sorted_bam, reference, args.output_folder, args.analysis_name, files_to_delete,
+                                 logger, Config)
+
+    plasmid_contigs = args.output_folder + "spades_plasmid_results" + "/contigs.fasta"
+
+    (final_l500_contig, final_l500_plasmid_contig) = bioawk(polished_pilon_fasta, plasmid_contigs, args.output_folder,
+                                                            args.analysis_name, logger, Config, args.assembly)
+
+    return final_l500_contig, final_l500_plasmid_contig
 
 
 """
@@ -474,25 +730,19 @@ if __name__ == '__main__':
         args.output_folder += '/'
         make_sure_path_exists(args.output_folder)
     global logger
+    global files_to_delete
+    files_to_delete = ""
     log_unique_time = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
     logger = generate_logger(args.output_folder, args.analysis_name, log_unique_time)
     global Config
     Config = ConfigParser.ConfigParser()
     Config.read(config_file)
     pipeline(args, logger)
-    # final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
-    # forward_paired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['f_p']
-    # reverse_paired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['r_p']
-    # forward_unpaired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['f_up']
-    # reverse_unpaired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['r_up']
-    # split_field = prepare_readgroup(forward_paired, "bwa", logger)
-    # base_cmd = ConfigSectionMap("bin_path", Config)['binbase'] + "/" + ConfigSectionMap("bowtie", Config)[
-    #     'bowtie_bin'] + "/" + ConfigSectionMap("bowtie", Config)['align_cmd']
-    # files_to_delete = ""
-    # parameters = ConfigSectionMap("bowtie", Config)['parameters']
-    #
-    # align_bowtie(base_cmd, forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.output_folder, final_l500_contig,
-    #              split_field, args.analysis_name, files_to_delete, logger, Config, args.type, parameters)
+
+    #(final_l500_contig, final_l500_plasmid_contig) = run_pilon()
+
+
+
     keep_logging('End: Pipeline', 'End: Pipeline', logger, 'info')
     time_taken = datetime.now() - start_time_2
     keep_logging('Total Time taken: {}'.format(time_taken), 'Total Time taken: {}'.format(time_taken), logger, 'info')
