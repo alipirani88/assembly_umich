@@ -87,7 +87,6 @@ def pipeline(args, logger):
         Forward_read = args.file_1
         Reverse_read = args.file_2
 
-
     if args.assembly:
         do_assembly = args.assembly
     else:
@@ -121,18 +120,6 @@ def pipeline(args, logger):
             keep_logging('START: Pre-processing step using Trimmomatic.', 'START: Pre-processing step using Trimmomatic.', logger, 'info')
             (forward_paired, reverse_paired, forward_unpaired, reverse_unpaired) = clean_reads(Forward_read, Reverse_read, args.output_folder, args.crop, logger, Config)
             keep_logging('END: Pre-processing step using Trimmomatic.', 'END: Pre-processing step using Trimmomatic.', logger, 'info')
-            # if args.ariba == "AMR" and reverse_paired:
-            #     keep_logging('Running Ariba AMR...', 'Running Ariba AMR...', logger, 'info')
-            #     ariba_AMR(forward_paired, reverse_paired, args.output_folder, args.analysis_name, logger, Config)
-            # if args.ariba == "MLST" and reverse_paired:
-            #     keep_logging('Running Ariba MLST...', 'Running Ariba MLST...', logger, 'info')
-            #     keep_logging('You chose steps 1 to 1: Pre-processing using Trimmomatic', 'You chose steps 1 to 1: Pre-processing using Trimmomatic', logger, 'info')
-            #     ariba_MLST(forward_paired, reverse_paired, args.output_folder, args.analysis_name, logger, Config)
-            # if args.ariba == "both" and reverse_paired:
-            #     keep_logging('Running Ariba AMR and MLST...', 'Running Ariba AMR and MLST...', logger, 'info')
-            #     keep_logging('You chose steps 1 to 1: Pre-processing using Trimmomatic', 'You chose steps 1 to 1: Pre-processing using Trimmomatic', logger, 'info')
-            #     ariba_AMR(forward_paired, reverse_paired, args.output_folder, args.analysis_name, logger, Config)
-            #     ariba_MLST(forward_paired, reverse_paired, args.output_folder, args.analysis_name, logger, Config)
         elif args.start_step == 1 and args.end_step == 2:
             keep_logging('You chose steps 1 to 2: Pre-processing and Assembly', 'You chose steps 1 to 2: Pre-processing and Assembly', logger, 'info')
             keep_logging('START: Pre-processing step using Trimmomatic.', 'START: Pre-processing step using Trimmomatic.', logger, 'info')
@@ -153,6 +140,9 @@ def pipeline(args, logger):
             keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger, 'info')
             quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
             keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
+
+        # Main Method to run end-to-end Assembly pipeline
+        # Main Method to run end-to-end Assembly pipeline
         elif args.start_step == 1 and args.end_step == 4:
             keep_logging('You chose steps 1 to 4: Pre-processing, Assembly, Evaluation and Annotation', 'You chose steps 1 to 4: Pre-processing, Assembly, Evaluation and Annotation', logger, 'info')
             keep_logging('START: Pre-processing step using Trimmomatic.', 'START: Pre-processing step using Trimmomatic.', logger, 'info')
@@ -160,26 +150,24 @@ def pipeline(args, logger):
             keep_logging('END: Pre-processing step using Trimmomatic.', 'END: Pre-processing step using Trimmomatic.', logger, 'info')
             keep_logging('START: Starting Assembly using {}'.format(args.assembler), 'START: Starting Assembly using {}'.format(args.assembler), logger, 'info')
             (contigs, scaffolds, plasmid_contigs, plasmid_scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, args.output_folder, logger, Config, do_assembly)
-            contigs = args.output_folder + "spades_results" + "/contigs.fasta"
-            scaffolds = args.output_folder + "spades_results" + "/scaffolds.fasta"
-            plasmid_contigs = args.output_folder + "spades_plasmid_results" + "/contigs.fasta"
-            plasmid_scaffolds = args.output_folder + "spades_plasmid_results" + "/contigs.fasta"
             keep_logging('END: Starting Assembly using {}'.format(args.assembler), 'END: Starting Assembly using {}'.format(args.assembler), logger, 'info')
 
-            # Comment out the Bioawk step. Bioawk is added in Pilon step.
+            # Commenting out  Bioawk step. Bioawk will be run after pilon and is already added in Pilon Method.
             #(final_l500_contig, final_l500_plasmid_contig) = bioawk(contigs, plasmid_contigs, args.output_folder, args.analysis_name, logger, Config, do_assembly)
+
+            # Use Spades assembly as a reference to map back reads and generate BAM for Pilon
             reference = "%s/spades_results/contigs.fasta" % (args.output_folder)
+
             # Adding Pilon to the pipeline
             (final_l500_contig, final_l500_plasmid_contig) = run_pilon(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, reference)
+
             keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger, 'info')
             quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
             keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
-            #final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
-            #final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
 
+            # Order contigs with reference to the reference genome provided.
             if args.reference and args.reference != "None":
                 final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
-                #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
                 sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 os.system(sed_cmd)
@@ -188,30 +176,25 @@ def pipeline(args, logger):
             else:
                 print "\nPlease provide a path to reference genome for Abacas\n"
                 final_ordered_contigs = final_l500_contig
-                #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
                 sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_ordered_contigs)
                 sed_cmd_2 = "sed -i 's/_length_.*//g' %s" % (final_ordered_contigs)
-                #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 keep_logging(sed_cmd_2, sed_cmd_2, logger, 'debug')
-                #keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
                 os.system(sed_cmd)
                 os.system(sed_cmd_2)
-                #os.system(sed_cmd_3)
                 final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
                 keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), 'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), logger, 'debug')
             sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_l500_plasmid_contig)
-            #sed_cmd_2 = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
             sed_cmd_2 = "sed -i 's/_length_.*component//g' %s" % (final_l500_plasmid_contig)
-            #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_l500_plasmid_contig)
             keep_logging(sed_cmd, sed_cmd, logger, 'debug')
             keep_logging(sed_cmd_2, sed_cmd, logger, 'debug')
             os.system(sed_cmd)
             os.system(sed_cmd_2)
-            #os.system(sed_cmd_3)
             plasmid_first_part = args.analysis_name + "_plasmid"
             final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part, logger, Config)
             keep_logging('Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), 'Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), logger, 'debug')
+
+
         elif args.start_step == 2 and args.end_step == 3:
             keep_logging('You chose steps 2 to 3: Assembly and Evaluation', 'You chose steps 2 to 3: Assembly and Evaluation', logger, 'info')
             (contigs, scaffolds) = assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, args.assembler, args.output_folder, do_assembly)
@@ -228,8 +211,7 @@ def pipeline(args, logger):
             keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger, 'info')
             quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
             keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
-            #final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
-            #final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
+
             if args.reference and args.reference != "None":
                 final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
                 #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
@@ -241,27 +223,27 @@ def pipeline(args, logger):
             else:
                 print "\nPlease provide a path to reference genome for Abacas\n"
                 final_ordered_contigs = final_l500_contig
-                #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
+
                 sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_ordered_contigs)
                 sed_cmd_2 = "sed -i 's/_length_.*//g' %s" % (final_ordered_contigs)
-                #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
+
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 keep_logging(sed_cmd_2, sed_cmd_2, logger, 'debug')
-                #keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
+
                 os.system(sed_cmd)
                 os.system(sed_cmd_2)
-                #os.system(sed_cmd_3)
+
                 final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
                 keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), 'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), logger, 'debug')
             sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_l500_plasmid_contig)
-            #sed_cmd_2 = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
+
             sed_cmd_2 = "sed -i 's/_length_.*component//g' %s" % (final_l500_plasmid_contig)
-            #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_l500_plasmid_contig)
+
             keep_logging(sed_cmd, sed_cmd, logger, 'debug')
             keep_logging(sed_cmd_2, sed_cmd, logger, 'debug')
             os.system(sed_cmd)
             os.system(sed_cmd_2)
-            #os.system(sed_cmd_3)
+
             plasmid_first_part = args.analysis_name + "_plasmid"
             final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part, logger, Config)
             keep_logging('Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), 'Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), logger, 'debug')
@@ -273,11 +255,10 @@ def pipeline(args, logger):
             keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger, 'info')
             quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
             keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
-            #final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
-            #final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
+
             if args.reference and args.reference != "None":
                 final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
-                #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
+
                 sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 os.system(sed_cmd)
@@ -286,27 +267,27 @@ def pipeline(args, logger):
             else:
                 print "\nPlease provide a path to reference genome for Abacas\n"
                 final_ordered_contigs = final_l500_contig
-                #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
+
                 sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_ordered_contigs)
                 sed_cmd_2 = "sed -i 's/_length_.*//g' %s" % (final_ordered_contigs)
-                #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
+
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 keep_logging(sed_cmd_2, sed_cmd_2, logger, 'debug')
-                #keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
+
                 os.system(sed_cmd)
                 os.system(sed_cmd_2)
-                #os.system(sed_cmd_3)
+
                 final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
                 keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), 'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), logger, 'debug')
             sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_l500_plasmid_contig)
-            #sed_cmd_2 = "sed -i 's/_length_.*component/_plasmid/g' %s" % (final_l500_plasmid_contig)
+
             sed_cmd_2 = "sed -i 's/_length_.*component//g' %s" % (final_l500_plasmid_contig)
-            #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_l500_plasmid_contig)
+
             keep_logging(sed_cmd, sed_cmd, logger, 'debug')
             keep_logging(sed_cmd_2, sed_cmd, logger, 'debug')
             os.system(sed_cmd)
             os.system(sed_cmd_2)
-            #os.system(sed_cmd_3)
+
             plasmid_first_part = args.analysis_name + "_plasmid"
             final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part, logger, Config)
             keep_logging('Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), 'Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), logger, 'debug')
@@ -316,7 +297,7 @@ def pipeline(args, logger):
             if args.reference and args.reference != "None":
                 print "here"
                 final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
-                #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
+
                 sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 os.system(sed_cmd)
@@ -325,16 +306,15 @@ def pipeline(args, logger):
             else:
                 print "\nPlease provide a path to reference genome for Abacas\n"
                 final_ordered_contigs = final_l500_contig
-                #final_ordered_contigs = "/nfs/esnitkin/Ali/Project_MRSA_analysis/MRSA_assembly///6154_R1.fastq.g_contigs_ordered.fasta"
+
                 sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_ordered_contigs)
                 sed_cmd_2 = "sed -i 's/_length_.*//g' %s" % (final_ordered_contigs)
-                #sed_cmd_3 = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
+
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 keep_logging(sed_cmd_2, sed_cmd_2, logger, 'debug')
-                #keep_logging(sed_cmd_3, sed_cmd_3, logger, 'debug')
+
                 os.system(sed_cmd)
                 os.system(sed_cmd_2)
-                #os.system(sed_cmd_3)
                 final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
                 keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), 'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), logger, 'debug')
             sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_l500_plasmid_contig)
@@ -421,12 +401,22 @@ def get_contigs(out_path, assembler):
 
 """ Downsample Raw reads data to Default 100 X or user specified coverage """
 def downsample(args, logger):
-    print "Downsampling Coverage Depth to: %s" % args.coverage_depth
+    if args.coverage_depth:
+        keep_logging('Downsampling Coverage Depth to: %s' % args.coverage_depth, 'Downsampling Coverage Depth to: %s' % args.coverage_depth, logger, 'info')
 
-    print "Running: /nfs/esnitkin/bin_group/variant_calling_bin/mash sketch -o /tmp/sketch_out -k 32 -m 3 -r %s" % args.file_1
+    keep_logging("Running: /nfs/esnitkin/bin_group/variant_calling_bin/mash sketch -o /tmp/sketch_out -k 32 -m 3 -r %s >& /tmp/sketch_stdout" % args.file_1, "Running: /nfs/esnitkin/bin_group/variant_calling_bin/mash sketch -o /tmp/sketch_out -k 32 -m 3 -r %s >& /tmp/sketch_stdout" % args.file_1, logger, 'info')
 
     mash_cmd = "/nfs/esnitkin/bin_group/variant_calling_bin/mash sketch -o /tmp/sketch_out -k 32 -m 3 -r %s >& /tmp/sketch_stdout" % args.file_1
-    os.system(mash_cmd)
+
+    keep_logging('Running: %s' % mash_cmd,
+                 'Running: %s' % mash_cmd, logger, 'info')
+
+    try:
+        call(mash_cmd, logger)
+    except sp.CalledProcessError:
+        keep_logging('Error running Mash for estimating genome size.', 'Error running Mash for estimating genome size', logger, 'exception')
+        sys.exit(1)
+
 
     with open("/tmp/sketch_stdout", 'rU') as file_open:
         for line in file_open:
@@ -436,12 +426,21 @@ def downsample(args, logger):
                 est_cov = float(line.split(': ')[1].strip())
     file_open.close()
 
-    print "Estimated Genome Size: %s" % gsize
+    keep_logging('Estimated Genome Size from Mash Sketch: %s' % gsize,
+                 'Estimated Genome Size from Mash Sketch: %s' % gsize, logger, 'info')
+
 
     seqtk_check = "/nfs/esnitkin/bin_group/seqtk/seqtk fqchk -q3 %s > /tmp/%s_fastqchk.txt" % (
     args.file_1, os.path.basename(args.file_1))
-    print "Running: %s" % seqtk_check
-    os.system(seqtk_check)
+    keep_logging('Running seqtk to extract Fastq statistics: %s' % seqtk_check,
+                 'Running seqtk to extract Fastq statistics: %s' % seqtk_check, logger, 'info')
+
+
+    try:
+        call(seqtk_check, logger)
+    except sp.CalledProcessError:
+        keep_logging('Error running seqtk for extracting fastq statistics.', 'Error running seqtk for extracting fastq statistics.', logger, 'exception')
+        sys.exit(1)
 
     with open("/tmp/%s_fastqchk.txt" % os.path.basename(args.file_1), 'rU') as file_open:
         for line in file_open:
@@ -455,34 +454,99 @@ def downsample(args, logger):
                 total_bases = int(line_split[1]) * 2
     file_open.close()
 
-    print "Average Read Length: %s" % avg_len
-    print "Total number of bases in fastq: %s" % total_bases
+    keep_logging('Average Read Length: %s' % avg_len,
+                 'Average Read Length: %s' % avg_len, logger, 'info')
+
+    keep_logging('Total number of bases in fastq: %s' % total_bases,
+                 'Total number of bases in fastq: %s' % total_bases, logger, 'info')
 
     ori_coverage_depth = int(total_bases / gsize)
-    print "Original Covarage Depth: %s x" % ori_coverage_depth
+    keep_logging('Original Covarage Depth: %s x' % ori_coverage_depth,
+                 'Original Covarage Depth: %s x' % ori_coverage_depth, logger, 'info')
 
     if not args.coverage_depth and ori_coverage_depth > 100:
         # Downsample to 100
-        factor = float(100 / ori_coverage_depth)
-        print round(factor, 3)
+        factor = float(100 / float(ori_coverage_depth))
     else:
-        factor = float(float(args.coverage_depth) / ori_coverage_depth)
-        print round(factor, 3)
+        factor = float(float(args.coverage_depth) / float(ori_coverage_depth))
 
     proc = sp.Popen(["nproc"], stdout=sp.PIPE, shell=True)
     (nproc, err) = proc.communicate()
     nproc = nproc.strip()
 
-    r1_sub = "/tmp/%s" % os.path.basename(args.file_1)
+    if not args.coverage_depth and ori_coverage_depth > 100:
+        # Downsample to 100
+        factor = float(100 / float(ori_coverage_depth))
+        print factor
+        r1_sub = "/tmp/%s" % os.path.basename(args.file_1)
 
-    os.system("/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
-        args.file_1, factor, nproc, os.path.basename(args.file_1)))
-    if args.file_2:
-        r2_sub = "/tmp/%s" % os.path.basename(args.file_2)
-        os.system("/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
-            args.file_2, factor, nproc, os.path.basename(args.file_2)))
+        # Downsample using seqtk
+        try:
+            keep_logging("/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+                args.file_1, factor, nproc, os.path.basename(args.file_1)),
+                         "/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+                args.file_1, factor, nproc, os.path.basename(args.file_1)), logger, 'info')
+            call("/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+                args.file_1, factor, nproc, os.path.basename(args.file_1)), logger)
+        except sp.CalledProcessError:
+            keep_logging('Error running seqtk for downsampling raw fastq reads.',
+                         'Error running seqtk for downsampling raw fastq reads.', logger, 'info')
+            sys.exit(1)
+
+        if args.file_2:
+            r2_sub = "/tmp/%s" % os.path.basename(args.file_2)
+
+            try:
+                keep_logging("/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+                    args.file_2, factor, nproc, os.path.basename(args.file_2)),
+                             "/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+                    args.file_2, factor, nproc, os.path.basename(args.file_2)), logger, 'info')
+                call("/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+                    args.file_2, factor, nproc, os.path.basename(args.file_2)), logger)
+            except sp.CalledProcessError:
+                keep_logging('Error running seqtk for downsampling raw fastq reads.',
+                             'Error running seqtk for downsampling raw fastq reads.', logger, 'exception')
+                sys.exit(1)
+        else:
+            r2_sub = "None"
+    elif not args.coverage_depth and ori_coverage_depth < 100:
+        r1_sub = args.file_1
+        r2_sub = args.file_2
     else:
-        r2_sub = "None"
+        factor = float(float(args.coverage_depth) / float(ori_coverage_depth))
+        #print round(factor, 3)
+        r1_sub = "/tmp/%s" % os.path.basename(args.file_1)
+
+        # Downsample using seqtk
+        try:
+            keep_logging("/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+                args.file_1, factor, nproc, os.path.basename(args.file_1)),
+                         "/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+                args.file_1, factor, nproc, os.path.basename(args.file_1)), logger, 'info')
+            call("/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+                args.file_1, factor, nproc, os.path.basename(args.file_1)), logger)
+        except sp.CalledProcessError:
+            keep_logging('Error running seqtk for downsampling raw fastq reads.',
+                         'Error running seqtk for downsampling raw fastq reads.', logger, 'exception')
+            sys.exit(1)
+
+        if args.file_2:
+            r2_sub = "/tmp/%s" % os.path.basename(args.file_2)
+
+            try:
+                keep_logging("/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+                    args.file_2, factor, nproc, os.path.basename(args.file_2)),
+                             "/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+                    args.file_2, factor, nproc, os.path.basename(args.file_2)), logger, 'info')
+                call("/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+                    args.file_2, factor, nproc, os.path.basename(args.file_2)), logger)
+            except sp.CalledProcessError:
+                keep_logging('Error running seqtk for downsampling raw fastq reads.',
+                             'Error running seqtk for downsampling raw fastq reads.', logger, 'exception')
+                sys.exit(1)
+        else:
+            r2_sub = "None"
+
     return r1_sub, r2_sub
 
 """ Prepare ReadGroup option for BWA alignment """
@@ -490,31 +554,18 @@ def prepare_readgroup(forward_read, aligner, logger):
     keep_logging('Preparing ReadGroup Info', 'Preparing ReadGroup Info', logger, 'info')
     samplename = os.path.basename(forward_read)
     if forward_read.endswith(".gz"):
-        #output = gzip.open(forward_read, 'rb')
-        #firstLine = output.readline()
-        #split_field = re.split(r":",firstLine)
-        #id_name = split_field[1]
-        #id_name = id_name.strip()
-        #split_field = "\"" + "@RG" + "\\tID:" + split_field[1] + "\\tSM:" + samplename + "\\tLB:1\\tPL:Illumina" + "\""
-        #return split_field
         output = gzip.open(forward_read, 'rb')
         firstLine = output.readline()
         if ":" in firstLine:
             split_field = re.split(r":",firstLine)
             id_name = split_field[1].rstrip()
             id_name = id_name.rstrip()
-        # if aligner == "bowtie":
-        #     split_field = "--rg-id %s --rg SM:%s --rg LB:1 --rg PL:Illumina" % (split_field[1], samplename)
-        # elif aligner == "bwa":
-        #     split_field = "\"" + "@RG" + "\\tID:" + split_field[1] + "\\tSM:" + samplename + "\\tLB:1\\tPL:Illumina" + "\""
 
         ###Pending
         elif "/" in firstLine:
             split_field = re.split(r"/",firstLine)
             id_name = split_field[1].rstrip()
             id_name = id_name.rstrip()
-            #id_name = split_field[1].rstrip()
-            #id_name = id_name.rstrip()
             split_field = "\"" + "@RG" + "\\tID:" + id_name + "\\tSM:" + samplename + "\\tLB:1\\tPL:Illumina" + "\""
         else:
             id_name = "1"
@@ -585,14 +636,10 @@ def create_fai_index(reference, ref_fai_index):
         keep_logging('Samtools Fai Index file created.', 'Samtools Fai Index file created.', logger, 'info')
 
 def picard_seqdict(dict_name, reference):
-    #dict_name = os.path.splitext(os.path.basename(reference_filename))[0] + ".dict"
     keep_logging('Creating Sequence Dictionary using Picard.', 'Creating Sequence Dictionary using Picard.', logger, 'info')
-    # cmd = "java -jar %s/%s/%s CreateSequenceDictionary REFERENCE=%s OUTPUT=%s/%s" % (ConfigSectionMap("bin_path", Config)['binbase'], ConfigSectionMap("picard", Config)['picard_bin'], ConfigSectionMap("picard", Config)['base_cmd'], reference, reference, dict_name)
-
     cmd = "java -jar %s/%s/%s CreateSequenceDictionary REFERENCE=%s OUTPUT=%s/%s" % (
     ConfigSectionMap("bin_path", Config)['binbase'], ConfigSectionMap("picard", Config)['picard_bin'],
     ConfigSectionMap("picard", Config)['base_cmd'], reference, os.path.dirname(reference), dict_name)
-
     keep_logging(cmd, cmd, logger, 'debug')
     try:
         call(cmd, logger)
@@ -626,8 +673,6 @@ def post_align(out_sam, reference):
     return out_sorted_bam
 
 def file_exists_for_alignment(path1, path2, reference):
-
-
     if not os.path.isfile(reference):
         file_basename = os.path.basename(reference)
         keep_logging('The reference fasta file {} does not exists. Please provide another with full path file with full path or check the files path.\n'.format(file_basename), 'The reference fasta file {} does not exists. Please provide another file or check the files path.\n'.format(file_basename), logger, 'exception')
@@ -666,7 +711,7 @@ def file_exists_for_alignment(path1, path2, reference):
         keep_logging('The reference seq dict file required for GATK and PICARD exists.', 'The reference seq dict file required for GATK and PICARD exists.', logger, 'info')
 
 def run_pilon(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, reference):
-    # Post assembly improvements - Actively developing this step.
+    # Post assembly improvements
     # Changes Added on August 26 2019
     split_field = prepare_readgroup(forward_paired, "bwa", logger)
     files_to_delete = []
@@ -738,11 +783,6 @@ if __name__ == '__main__':
     Config = ConfigParser.ConfigParser()
     Config.read(config_file)
     pipeline(args, logger)
-
-    #(final_l500_contig, final_l500_plasmid_contig) = run_pilon()
-
-
-
     keep_logging('End: Pipeline', 'End: Pipeline', logger, 'info')
     time_taken = datetime.now() - start_time_2
     keep_logging('Total Time taken: {}'.format(time_taken), 'Total Time taken: {}'.format(time_taken), logger, 'info')
