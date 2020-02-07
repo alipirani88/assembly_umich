@@ -95,7 +95,7 @@ faiindex: faidx
 #-q30 -B -E -C50
 
 [ariba]
-ariba_bin = /nfs/esnitkin/bin_group/anaconda3/bin/
+ariba_bin = /nfs/esnitkin/bin_group/ariba/scripts/
 base_cmd = ariba
 ariba_amr_db = /nfs/esnitkin/bin_group/ariba/database/custom_new/out.card.proteus.prepareref/
 ariba_mlst_db = /nfs/esnitkin/bin_group/ariba/database/MLST_db/KP_MLST/ref_db/

@@ -67,9 +67,9 @@ def create_new_assembly_jobs(list_of_files):
     job_array = []
     for file in list_of_files:
         filename_base = os.path.basename(file)
-
+	#print filename_base
         #if "R1_001_final.fastq.gz" in filename_base or "R1.fastq.gz" in filename_base or "1_combine.fastq.gz" in filename_base or "1_sequence.fastq.gz" in filename_base or "_forward.fastq.gz" in filename_base or "R1_001.fastq.gz" in filename_base or "_1.fastq.gz" in filename_base or ".1.fastq.gz" in filename_base or "_R1.fastq.gz" in filename_base or "_R2.fastq.gz" not in filename_base:
-        if re.search("R1_001_final.fastq.gz", filename_base) or re.search("R1.fastq.gz", filename_base) or re.search("1_combine.fastq.gz", filename_base) or re.search("1_sequence.fastq.gz", filename_base) or re.search("_forward.fastq.gz", filename_base) or re.search("R1_001.fastq.gz", filename_base) or re.search("_1.fastq.gz", filename_base) or re.search(".1.fastq.gz", filename_base) or re.search("_R1.fastq.gz", filename_base):
+        if re.search("R1_001_final.fastq.gz", filename_base) or re.search("R1.fastq.gz", filename_base) or re.search("1_combine.fastq.gz", filename_base) or re.search("1_sequence.fastq.gz", filename_base) or re.search("_forward.fastq.gz", filename_base) or re.search("R1_001.fastq.gz", filename_base) or re.search("_1.fastq.gz", filename_base) or re.search(".1.fastq.gz", filename_base) or re.search("_R1.fastq.gz", filename_base) or re.search("_R1_001.fastq.gz", filename_base):
             # Forward reads file name and get analysis name from its name
             first_file = file
             #print first_file
@@ -104,9 +104,10 @@ def create_new_assembly_jobs(list_of_files):
                 first_part_split = filename_base.split('_forward.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
                 first_part = re.sub("_S.*_", "", first_part)
-            elif "R1_001.fastq.gz" in filename_base:
-                second_part = filename_base.replace("R1_001.fastq.gz", "R2_001.fastq.gz")
-                first_part_split = filename_base.split('R1_001.fastq.gz')
+            elif "_R1_001.fastq.gz" in filename_base:
+		print "here"
+                second_part = filename_base.replace("_R1_001.fastq.gz", "_R2_001.fastq.gz")
+                first_part_split = filename_base.split('_R1_001.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
                 first_part = re.sub("_S.*_", "", first_part)
             elif "_1.fastq.gz" in filename_base:
@@ -135,11 +136,11 @@ def create_new_assembly_jobs(list_of_files):
             second_file = args.dir + "/" + second_part
 
         # Change these directory paths to where your pipeline code is located. Also make sure the path to config file is correct.
-        cd_command = "cd /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich/"
+        cd_command = "cd /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich_dev/"
         if args.config:
             config = args.config
         else:
-            config = "/nfs/esnitkin/bin_group/pipeline/Github/assembly_umich/config"
+            config = "/nfs/esnitkin/bin_group/pipeline/Github/assembly_umich_dev/config"
         job_name = "%s" % args.out_dir + first_part + ".pbs"
         if args.assembly:
             assembly_para = "-assembly " + args.assembly
@@ -170,7 +171,7 @@ def create_new_assembly_jobs(list_of_files):
             job_array.append(job_name)
     for jobs in job_array:
         print "qsub %s" % jobs
-        os.system("qsub %s" % jobs)
+        #os.system("qsub %s" % jobs)
 # Main Function; Check which Pipeline function to use based on command-line argument: pipeline
 if args.pipeline == "varcall":
     print "Generating Variant Calling PBS scripts for samples in args.filenames"

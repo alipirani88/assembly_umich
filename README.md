@@ -2,7 +2,8 @@
 
 ## Synopsis
 
-This pipeline assembles Illumina PE/SE FastQ reads provided in a directory using SPAdes assembler, generates multiqc assembly report and can also be used to run ariba for finding resistance genes and MLST typing.
+This pipeline performs various assembly and post-assembly steps on Illumina PE/SE reads. The various steps of the pipeline are - clean reads with Trimmomatic, assemble clean reads with SPAdes assembler, perform post-assembly correction with PILON, AMR and MLST typing using ARIBA.
+
 <!---
 This pipeline takes Illumina PE/SE FastQ reads as input for various steps of pre-processing, assembly, evaluation, assembly improvement and annotation steps.
 Require testing: The pipeline can also be used to run ariba for finding resistance genes and MLST typing.
@@ -22,14 +23,6 @@ Require testing: The pipeline can also be used to run ariba for finding resistan
 ## Installation
 
 Pending. 
-
-Ignore this if you are in snitkin lab. The dependencies are already installed in lab bin_group folder: 
-
-/nfs/esnitkin/bin_group/assembly_bin/. 
-
-Use the python version installed in:
-
-/nfs/esnitkin/bin_group/anaconda2/bin/python
 
 ## Input
 
