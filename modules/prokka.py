@@ -13,7 +13,7 @@ from modules.logging_subprocess import *
 ####################################################################### Genome annotation using Prokka #######################################################################################################
 def prokka(final_ordered_contigs, out_path, first_part, logger, Config):
     keep_logging('Genome Annotation using Prokka', 'Genome Annotation using Prokka', logger, 'info')
-    prokka_cmd = "%s/%s/%s -outdir %s/%s_prokka/ -prefix %s %s %s" % (ConfigSectionMap("bin_path", Config)['binbase'], ConfigSectionMap("prokka", Config)['prokka_bin'], ConfigSectionMap("prokka", Config)['base_cmd'], out_path, first_part, first_part, ConfigSectionMap("prokka", Config)['prokka_parameters'], final_ordered_contigs)
+    prokka_cmd = "%s -outdir %s/%s_prokka/ -prefix %s %s %s" % (ConfigSectionMap("prokka", Config)['base_cmd'], out_path, first_part, first_part, ConfigSectionMap("prokka", Config)['prokka_parameters'], final_ordered_contigs)
     try:
         keep_logging(prokka_cmd, prokka_cmd, logger, 'debug')
         call(prokka_cmd, logger)

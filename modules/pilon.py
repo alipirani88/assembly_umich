@@ -12,10 +12,9 @@ from modules.logging_subprocess import *
 
 
 def pilon(out_sorted_bam, reference, out_path, analysis, files_to_delete, logger, Config):
-    base_cmd = ConfigSectionMap("bin_path", Config)['binbase'] + "/" + ConfigSectionMap("pilon", Config)[
-        'pilon_bin'] + "/" + ConfigSectionMap("pilon", Config)['base_cmd']
+    base_cmd = ConfigSectionMap("pilon", Config)['base_cmd']
     keep_logging('Running Pilon for post-assembly improvement', 'Running Pilon for post-assembly improvement', logger, 'info')
-    cmd = "java -jar %s --genome %s --bam %s --output %s --outdir %s --changes --verbose" % (
+    cmd = "%s --genome %s --bam %s --output %s --outdir %s --changes --verbose" % (
     base_cmd, reference, out_sorted_bam, analysis, out_path)
     keep_logging(cmd, cmd, logger, 'debug')
     try:
