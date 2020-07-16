@@ -20,7 +20,7 @@ def abacas(reference_genome_path, final_l500_contig, out_path, first_part, logge
         #print ""
         fasta_header = ">%s" % first_part
         header_cmd = "echo \"%s\" > %s/fasta_header" % (fasta_header, out_path)
-        print header_cmd
+        print (header_cmd)
         keep_logging(abacas_cmd, abacas_cmd, logger, 'debug')
         call(header_cmd, logger)
         abacas_ordered_multifasta = "%s/%s_contigs_ordered.MULTIFASTA.fa" % (out_path, first_part)

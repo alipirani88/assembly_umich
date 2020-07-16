@@ -2,7 +2,8 @@
 
 ## Synopsis
 
-This pipeline assembles Illumina PE/SE FastQ reads provided in a directory using SPAdes assembler, generates multiqc assembly report and can also be used to run ariba for finding resistance genes and MLST typing.
+This pipeline performs various assembly and post-assembly steps on Illumina PE/SE reads. The various steps of the pipeline are - clean reads with Trimmomatic, assemble clean reads with SPAdes assembler, perform post-assembly correction with PILON, AMR and MLST typing using ARIBA.
+
 <!---
 This pipeline takes Illumina PE/SE FastQ reads as input for various steps of pre-processing, assembly, evaluation, assembly improvement and annotation steps.
 Require testing: The pipeline can also be used to run ariba for finding resistance genes and MLST typing.
@@ -22,14 +23,6 @@ Require testing: The pipeline can also be used to run ariba for finding resistan
 ## Installation
 
 Pending. 
-
-Ignore this if you are in snitkin lab. The dependencies are already installed in lab bin_group folder: 
-
-/nfs/esnitkin/bin_group/assembly_bin/. 
-
-Use the python version installed in:
-
-/nfs/esnitkin/bin_group/anaconda2/bin/python
 
 ## Input
 
@@ -51,9 +44,7 @@ ls /path-to-/test_readsdir/*_R1_*.fastq.gz | awk -F'/' '{print $(NF)}' > /PATH-t
 
 ## Steps
 
-
-![alt tag](https://github.com/alipirani88/assembly_umich/blob/master/pipeline.png)
-
+Image here
 
 
 
@@ -133,7 +124,7 @@ for i in *.pbs; do bash $i; done
 ```
 -->
 
-<!---
+
 ## Customizing Config file:
 
 By default, the pipeline uses config file that comes with the pipeline. Make sure to edit this config file or copy it to your local system, edit it and provide path of this edited config file with -config argument.
@@ -190,7 +181,6 @@ Parameters for each tools can be customised under the 'tool_parameter' attribute
 
 For example, to change the minadapterlength parameter of Trimmomatic from 8 to 10, replace minadapterlength of 8 with suppose 10 and restart the pipeline.
 
--->
 ## Log:
 
 The pipeline generates a log file following the naming convention: yyyy_mm_dd_hrs_mins_secs_analysisname.log.txt and tracks each event/command. The log file sections follow standard [Python logging conventions](https://docs.python.org/2/howto/logging.html): 
