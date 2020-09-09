@@ -29,12 +29,12 @@ def spades_assembly(forward_paired, reverse_paired, forward_unpaired, reverse_un
         # Clean Paired and unpaired reads doesn't exist. Take raw Input PE files for assembly
         message = "No clean Paired and unpaired reads. Considering forward_paired and reverse_paired as raw Fastq files for assembly.\n"
         print (message)
-        cmdstring = ConfigSectionMap("spades")['base_cmd'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " -o " + out_path + "spades_results " + ConfigSectionMap("spades")['spades_parameters']
-        plasmid_cmdstring = ConfigSectionMap("spades")['base_cmd'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " -o " + out_path + "spades_plasmid_results " + ConfigSectionMap("spades")['plasmid_spades_parameters']
+        cmdstring = ConfigSectionMap("spades", Config)['base_cmd'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " -o " + out_path + "spades_results " + ConfigSectionMap("spades", Config)['spades_parameters']
+        plasmid_cmdstring = ConfigSectionMap("spades", Config)['base_cmd'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " -o " + out_path + "spades_plasmid_results " + ConfigSectionMap("spades", Config)['plasmid_spades_parameters']
         print ("Running: %s \n" % cmdstring)
         print ("Running: %s \n" % plasmid_cmdstring)
         os.system(cmdstring)
-        os.system(plasmid_cmdstring = ConfigSectionMap("bin_path")['binbase'] + ConfigSectionMap("spades")['spades_bin'] + ConfigSectionMap("spades")['base_cmd'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " -o " + out_path + "spades_plasmid_results " + ConfigSectionMap("spades")['plasmid_spades_parameters'])
+        os.system(plasmid_cmdstring = ConfigSectionMap("bin_path", Config)['binbase'] + ConfigSectionMap("spades", Config)['spades_bin'] + ConfigSectionMap("spades", Config)['base_cmd'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " -o " + out_path + "spades_plasmid_results " + ConfigSectionMap("spades", Config)['plasmid_spades_parameters'])
         print ("Spades assembly results can be found in " + out_path + "spades_results")
         print ("plasmid Spades assembly results can be found in " + out_path + "spades_plasmid_results")
         contigs = out_path + "spades_results" + "/contigs.fasta"
@@ -70,8 +70,8 @@ def spades_assembly(forward_paired, reverse_paired, forward_unpaired, reverse_un
             print ("\n################## End: SPADES ASSEMBLY ##################\n")
         else:
             ##pending changes
-            cmdstring = ConfigSectionMap("spades")['base_cmd'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " -o " + out_path + "spades_results/ " + ConfigSectionMap("spades")['spades_parameters']
-            plasmid_cmdstring = ConfigSectionMap("spades")['base_cmd'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " -o " + out_path + "spades_plasmid_results/ " + ConfigSectionMap("spades")['plasmid_spades_parameters']
+            cmdstring = ConfigSectionMap("spades", Config)['base_cmd'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " -o " + out_path + "spades_results/ " + ConfigSectionMap("spades", Config)['spades_parameters']
+            plasmid_cmdstring = ConfigSectionMap("spades", Config)['base_cmd'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " -o " + out_path + "spades_plasmid_results/ " + ConfigSectionMap("spades", Config)['plasmid_spades_parameters']
             print ("Running: %s \n" % cmdstring)
             print ("Running: %s \n" % plasmid_cmdstring)
             os.system(cmdstring)

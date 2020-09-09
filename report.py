@@ -24,6 +24,7 @@ from datetime import datetime
 import readline
 from joblib import Parallel, delayed
 import multiprocessing
+from modules.quast import quast_evaluation
 
 """Parse command line arguments"""
 parser = argparse.ArgumentParser(description='Aggregate results from assembly pipeline and generate Assembly and Ariba reports')
@@ -36,66 +37,71 @@ def make_sure_path_exists(out_path):
         os.makedirs(out_path)
     except OSError as exception:
         if exception.errno != errno.EEXIST:
-            print "Errors in output folder path! please change the output path or analysis name\n"
+            print ("Errors in output folder path! please change the output path or analysis name\n")
             exit()
 
 
 def run_command(i):
-    print "Running: %s" % i
+    print ("Running: %s" % i)
     os.system(i)
-    done = "Completed: %s" % i
+    done = ("Completed: %s" % i)
     return done
+
+
+#Assembled contigs evaluation using QUAST
+def quast_evaluation(out_path, contigs):
+    if not os.path.isfile(contigs):
+        print ("Can't find scaffolds file in output folder. \nSpades:Please check the availability of scaffolds.fa file in the given output folder or change the name of contigs file to contigs.fasta\nVelvet:Please check the availability of contigs.fa file in the given output folder or change the name of contigs file to contigs.fa\n")
+        #exit()
+
+    cmd_assembly = "/nfs/esnitkin/bin_group/quast/quast.py " + contigs + " -o " + out_path + "/Report/Quast/%s" % (os.path.basename(contigs.replace('.fasta', '_quast_results'))) + " --contig-thresholds 0,1000,5000,10000,25000,50000"
+    print (cmd_assembly)
+    f = open("%s/Quast_commands.sh" % out_path, "a")
+    f.write(cmd_assembly + '\n')
+    f.close()
+
+    try:
+        os.system(cmd_assembly)
+    except sp.CalledProcessError:
+        sys.exit(1)
 
 """ Generate MultiQC assembly report """
 def assembly_report(args):
-    make_sure_path_exists("%s/Report/Quast" % args.out_dir)
-    list_of_quast_dir = glob.glob("%s/*/quast_results" % args.out_dir)
-    move_cmd_array = []
-    for i in list_of_quast_dir:
-        sample_name = os.path.basename(os.path.dirname(i))
-        move_cmd = "cp -r %s %s/Report/Quast/%s" % (i, args.out_dir, sample_name)
-        move_cmd_array.append(move_cmd)
-        #os.system(move_cmd)
-    results = Parallel(n_jobs=num_cores)(delayed(run_command)(i) for i in move_cmd_array)
-    uniq_time_prefix = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
-    print "Generating MultiQC assembly report for samples in %s" % args.out_dir
-    os.chdir("%s/Report/Quast/" % args.out_dir)
-    multiqc_cmd = "/nfs/esnitkin/bin_group/anaconda2/bin/multiqc -f --outdir %s/Report/Quast/ -n %s_assembly_report -i %s_assembly_report %s/Report/Quast/" % (args.out_dir, uniq_time_prefix, uniq_time_prefix, args.out_dir)
-    os.system(multiqc_cmd)
-
-    make_sure_path_exists("%s/Report/Quast_plasmid" % args.out_dir)
-    list_of_quast_plasmid_dir = glob.glob("%s/*/quast_plasmid_results" % args.out_dir)
-    move_cmd_array = []
-    for i in list_of_quast_plasmid_dir:
-        sample_name = os.path.basename(os.path.dirname(i))
-        move_cmd = "cp -r %s %s/Report/Quast_plasmid/%s" % (i, args.out_dir, sample_name)
-        #os.system(move_cmd)
-        move_cmd_array.append(move_cmd)
-    results = Parallel(n_jobs=num_cores)(delayed(run_command)(i) for i in move_cmd_array)
-    uniq_time_prefix = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
-    print "Generating MultiQC plasmid assembly report for samples in %s" % args.out_dir
-    multiqc_cmd = "/nfs/esnitkin/bin_group/anaconda2/bin/multiqc -f --outdir %s/Report/Quast_plasmid/ -n %s_plasmid_assembly_report -i %s_plasmid_assembly_report %s/Report/Quast_plasmid/" % (args.out_dir, uniq_time_prefix, uniq_time_prefix, args.out_dir)
-    os.system(multiqc_cmd)
-
+    # Move Data to Results folder
     start_time = datetime.now().strftime('%Y-%m-%d')
     make_sure_path_exists("%s/Results/%s_assembly" % (args.out_dir, start_time))
     make_sure_path_exists("%s/Results/%s_plasmid_assembly" % (args.out_dir, start_time))
+    make_sure_path_exists("%s/Report/Quast" % args.out_dir)
+
     list_of_assembly_fasta = glob.glob("%s/*/*_l500_contigs.fasta" % args.out_dir)
     for i in list_of_assembly_fasta:
-        move_cmd = "cp %s %s/Results/%s_assembly/%s.fasta" % (i, args.out_dir, start_time, os.path.basename(i).replace('_l500_contigs.fasta', ''))
-        print move_cmd
+        move_cmd = "cp %s %s/Results/%s_assembly/%s.fasta" % (
+        i, args.out_dir, start_time, os.path.basename(i).replace('_l500_contigs.fasta', ''))
+        print (move_cmd)
         os.system(move_cmd)
-    list_of_plasmid_assembly_fasta = glob.glob("%s/*/*_plasmid_contigs.fasta" % args.out_dir)
-    for i in list_of_plasmid_assembly_fasta:
-        move_cmd = "cp %s %s/Results/%s_plasmid_assembly/%s.fasta" % (i, args.out_dir, start_time, os.path.basename(i).replace('_plasmid_contigs.fasta', ''))
-        print move_cmd
-        os.system(move_cmd)
+        quast_evaluation(args.out_dir, i)
 
+    list_of_plasmid_assembly_fasta = glob.glob("%s/*/*_l500_plasmid_contigs.fasta" % args.out_dir)
+    for i in list_of_plasmid_assembly_fasta:
+        move_cmd = "cp %s %s/Results/%s_plasmid_assembly/%s.fasta" % (
+        i, args.out_dir, start_time, os.path.basename(i).replace('_l500_plasmid_contigs.fasta', ''))
+        print (move_cmd)
+        os.system(move_cmd)
+        quast_evaluation(args.out_dir, i)
+
+
+    #results = Parallel(n_jobs=num_cores)(delayed(run_command)(i) for i in move_cmd_array)
+    uniq_time_prefix = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    print ("Generating MultiQC assembly report for samples in %s" % args.out_dir)
+    os.chdir("%s/Report/Quast/" % args.out_dir)
+    multiqc_cmd = "multiqc -f --outdir %s/Report/Quast/ -n %s_assembly_report -i %s_assembly_report %s/Report/Quast/" % (args.out_dir, uniq_time_prefix, uniq_time_prefix, args.out_dir)
+    print multiqc_cmd
+    os.system(multiqc_cmd)
 
 
 def ariba_report(args):
     uniq_time_prefix = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
-    print "Generating Ariba report for samples in %s" % args.out_dir
+    print ("Generating Ariba report for samples in %s" % args.out_dir)
     os.chdir(args.out_dir)
     make_sure_path_exists("%s/Report/" % args.out_dir)
     os.system("ls */*_MLST/mlst_report.tsv > %s/Report/mlst_filenames" % (args.out_dir))
@@ -112,7 +118,7 @@ def ariba_report(args):
     args.out_dir, uniq_time_prefix, args.out_dir)
     ariba_cmd = "/nfs/esnitkin/bin_group/anaconda3/bin/python /nfs/esnitkin/bin_group/ariba/scripts/ariba summary --preset all %s/Report/%s_all_AMR_report %s/*/*_AMR/report.tsv" % (
         args.out_dir, uniq_time_prefix, args.out_dir)
-    print ariba_cmd
+    print (ariba_cmd)
     os.system(ariba_cmd)
 
 
@@ -123,10 +129,6 @@ if __name__ == '__main__':
     start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     start_time_2 = datetime.now()
 
-    """ Generate variables for logging modules"""
-    #global logger
-    #log_unique_time = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
-    #logger = generate_logger(args.output_folder, args.analysis_name, log_unique_time)
     num_cores = multiprocessing.cpu_count()
 
     """ Generate Report folder to save the results"""
@@ -139,4 +141,4 @@ if __name__ == '__main__':
     #ariba_report(args)
 
     time_taken = datetime.now() - start_time_2
-    #keep_logging('Total Time taken: {}'.format(time_taken), 'Total Time taken: {}'.format(time_taken), logger, 'info')
+

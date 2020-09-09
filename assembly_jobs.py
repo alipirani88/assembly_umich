@@ -11,7 +11,6 @@ from config_settings import ConfigSectionMap
 from modules.log_modules import  *
 from modules.logging_subprocess import *
 
-
 parser = argparse.ArgumentParser(description='Microbial Genome Assembly Pipeline.')
 required = parser.add_argument_group('Required arguments')
 optional = parser.add_argument_group('Optional arguments')
@@ -21,7 +20,6 @@ One file per line. \
 These can be obtained by running: ls *_R1_001.fastq.gz > filenames \
 Make Sure your Forward reads extension ends with \"_R1_001.fastq.gz\" ')
 required.add_argument('-out_dir', action='store', dest="out_dir", help='Provide a path where you want to save the assembly output')
-optional.add_argument('-reference', action='store', dest="reference", help='Reference Genome to be used for pipeline')
 required.add_argument('-type', action='store', dest="type", help='Type of Fastq files: PE or SE')
 optional.add_argument('-ariba', action='store', dest="ariba", help='Run Ariba to find AMR / MLST / both: possible options are AMR, MLST, both')
 optional.add_argument('-ariba_db', action='store', dest="ariba_db", help='Path to Ariba Database')
@@ -36,6 +34,7 @@ optional.add_argument('-coverage_depth', action='store', dest="coverage_depth",
                           help='Downsample Reads to this user specified depth')
 optional.add_argument('-scheduler', action='store', dest="scheduler",
                           help='Type of Scheduler for generating cluster jobs: PBS, SLURM, LOCAL')
+optional.add_argument('-reference', action='store', dest="reference", help='Reference Genome to be used for pipeline [Deprecated]')
 args = parser.parse_args()
 
 
@@ -158,11 +157,7 @@ def create_new_assembly_jobs(list_of_files):
                 first_part_split = filename_base.split('_R1.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
                 first_part = re.sub("_S.*_", "", first_part)
-            if "R1.fastq.gz" in filename_base:
-                second_part = filename_base.replace("R1.fastq.gz", "R2.fastq.gz")
-                first_part_split = filename_base.split('R1.fastq.gz')
-                first_part = first_part_split[0].replace('_L001', '')
-                first_part = re.sub("_S.*_", "", first_part)
+                first_part = first_part.replace('_R1.fastq.gz', '')
             if "1_combine.fastq.gz" in filename_base:
                 second_part = filename_base.replace("1_combine.fastq.gz", "2_combine.fastq.gz")
                 first_part_split = filename_base.split('1_combine.fastq.gz')
@@ -210,10 +205,12 @@ def create_new_assembly_jobs(list_of_files):
                 first_part = first_part_split[0].replace('_L001', '')
                 first_part = re.sub("_S.*_", "", first_part)
             # Get the name of reverse reads files
-            # second_part = filename_base.replace("_R1.fastq.gz", "_R2.fastq.gz")
+            second_part = filename_base.replace("_R1.fastq.gz", "_R2.fastq.gz")
             # first_part_split = filename_base.split('_R1.fastq.gz')
-            # first_part = first_part_split[0].replace('_L001', '')
-            # first_part = re.sub("_S.*_", "", first_part)
+            first_part = first_part_split[0].replace('_L001', '')
+            first_part = re.sub("_S.*_", "", first_part)
+            first_part = first_part.replace('_R1.fastq.gz', '')
+
             first_file = file
             second_file = args.dir + "/" + second_part
         else:

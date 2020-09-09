@@ -1,7 +1,7 @@
 __author__ = 'alipirani'
 """ Declaring required python modules """
 import argparse
-import subprocess
+import subprocess as sp
 import re
 import os
 import sys
@@ -18,7 +18,6 @@ from modules.trimmomatic import *
 from modules.assembly import *
 from modules.qa_fastqc import qa_fastqc
 from modules.quast import quast_evaluation
-# from modules.reapr import reapr
 from modules.abacas import abacas
 from modules.bioawk import *
 from modules.abacas import *
@@ -53,8 +52,8 @@ def parser():
                           help='yes/no: Downsample Reads data to default depth of 100X or user specified depth')
     optional.add_argument('-coverage_depth', action='store', dest="coverage_depth",
                           help='Downsample Reads to this user specified depth')
-
-
+    optional.add_argument('-genome_size', action='store', dest="genome_size",
+                          help='Genome Size. If not provided, will be estimated from Mash')
     return parser
 
 # Main Pipeline
@@ -132,10 +131,15 @@ def pipeline(args, logger):
             keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
 
         # Main Method to run end-to-end Assembly pipeline
-        # Main Method to run end-to-end Assembly pipeline
         elif args.start_step == 1 and args.end_step == 4:
             keep_logging('You chose steps 1 to 4: Pre-processing, Assembly, Evaluation and Annotation', 'You chose steps 1 to 4: Pre-processing, Assembly, Evaluation and Annotation', logger, 'info')
             keep_logging('START: Pre-processing step using Trimmomatic.', 'START: Pre-processing step using Trimmomatic.', logger, 'info')
+
+            forward_paired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['f_p']
+            reverse_paired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['r_p']
+            forward_unpaired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['f_up']
+            reverse_unpaired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['r_up']
+
             (forward_paired, reverse_paired, forward_unpaired, reverse_unpaired) = clean_reads(Forward_read, Reverse_read, args.output_folder, args.crop, logger, Config)
             keep_logging('END: Pre-processing step using Trimmomatic.', 'END: Pre-processing step using Trimmomatic.', logger, 'info')
             keep_logging('START: Starting Assembly using {}'.format(args.assembler), 'START: Starting Assembly using {}'.format(args.assembler), logger, 'info')
@@ -153,8 +157,8 @@ def pipeline(args, logger):
             # Adding Pilon to the pipeline
             (final_l500_contig, final_l500_plasmid_contig) = run_pilon(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, reference)
 
-            # final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
-            # final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
+            final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
+            final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
 
             # Order contigs with reference to the reference genome provided.
             if args.reference and args.reference != "None":
@@ -185,6 +189,10 @@ def pipeline(args, logger):
             final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part, logger, Config)
             keep_logging('Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), 'Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), logger, 'debug')
 
+            keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger,
+                         'info')
+            quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
+            keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
 
         elif args.start_step == 2 and args.end_step == 3:
             keep_logging('You chose steps 2 to 3: Assembly and Evaluation', 'You chose steps 2 to 3: Assembly and Evaluation', logger, 'info')
@@ -423,17 +431,40 @@ def downsample(args, logger):
         sys.exit(1)
 
 
-    with open("/tmp/sketch_stdout", 'rU') as file_open:
-        for line in file_open:
-            if line.startswith('Estimated genome size:'):
-                gsize = float(line.split(': ')[1].strip())
-            if line.startswith('Estimated coverage:'):
-                est_cov = float(line.split(': ')[1].strip())
-    file_open.close()
+    # with open("/tmp/sketch_stdout", 'rU') as file_open:
+    #     for line in file_open:
+    #         if line.startswith('Estimated genome size:'):
+    #             gsize = float(line.split(': ')[1].strip())
+    #         if line.startswith('Estimated coverage:'):
+    #             est_cov = float(line.split(': ')[1].strip())
+    # file_open.close()
+    #
+    # keep_logging('Estimated Genome Size from Mash Sketch: %s' % gsize,
+    #              'Estimated Genome Size from Mash Sketch: %s' % gsize, logger, 'info')
 
-    keep_logging('Estimated Genome Size from Mash Sketch: %s' % gsize,
-                 'Estimated Genome Size from Mash Sketch: %s' % gsize, logger, 'info')
 
+    if args.genome_size:
+        gsize = int(args.genome_size)
+        keep_logging('Using Genome Size: %s' % gsize,
+                     'Using Genome Size: %s' % gsize, logger, 'info')
+    else:
+        try:
+            call(mash_cmd, logger)
+        except sp.CalledProcessError:
+            keep_logging('Error running Mash for estimating genome size.', 'Error running Mash for estimating genome size', logger, 'exception')
+            sys.exit(1)
+
+        with open("/tmp/sketch_stdout", 'rU') as file_open:
+            for line in file_open:
+                if line.startswith('Estimated genome size:'):
+                    gsize = float(line.split(': ')[1].strip())
+                if line.startswith('Estimated coverage:'):
+                    est_cov = float(line.split(': ')[1].strip())
+        file_open.close()
+
+
+        keep_logging('Estimated Genome Size from Mash Sketch: %s' % gsize,
+                     'Estimated Genome Size from Mash Sketch: %s' % gsize, logger, 'info')
 
     seqtk_check = "seqtk fqchk -q3 %s > /tmp/%s_fastqchk.txt" % (
     args.file_1, os.path.basename(args.file_1))
@@ -475,22 +506,25 @@ def downsample(args, logger):
     else:
         factor = float(float(args.coverage_depth) / float(ori_coverage_depth))
 
-    proc = sp.Popen(["nproc"], stdout=sp.PIPE, shell=True)
-    (nproc, err) = proc.communicate()
-    nproc = nproc.strip()
+    # proc = sp.Popen(["nproc"], stdout=sp.PIPE, shell=True)
+    # (nproc, err) = proc.communicate()
+    # nproc = nproc.strip()
 
-    if not args.coverage_depth and ori_coverage_depth > 100:
+    proc = (sp.Popen(["nproc"], stdout=sp.PIPE, shell=True, universal_newlines=True)).communicate()[0]
+    nproc = proc.strip()
+
+    if ori_coverage_depth > 100:
         # Downsample to 100
         factor = float(100 / float(ori_coverage_depth))
-        print (factor)
+        print(factor)
         r1_sub = "/tmp/%s" % os.path.basename(args.file_1)
 
         # Downsample using seqtk
         try:
             keep_logging("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
                 args.file_1, factor, nproc, os.path.basename(args.file_1)),
-                         "seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
-                args.file_1, factor, nproc, os.path.basename(args.file_1)), logger, 'info')
+                         "/nfs/esnitkin/bin_group/seqtk/seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+                             args.file_1, factor, nproc, os.path.basename(args.file_1)), logger, 'info')
             call("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
                 args.file_1, factor, nproc, os.path.basename(args.file_1)), logger)
         except sp.CalledProcessError:
@@ -505,7 +539,7 @@ def downsample(args, logger):
                 keep_logging("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
                     args.file_2, factor, nproc, os.path.basename(args.file_2)),
                              "seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
-                    args.file_2, factor, nproc, os.path.basename(args.file_2)), logger, 'info')
+                                 args.file_2, factor, nproc, os.path.basename(args.file_2)), logger, 'info')
                 call("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
                     args.file_2, factor, nproc, os.path.basename(args.file_2)), logger)
             except sp.CalledProcessError:
@@ -514,44 +548,86 @@ def downsample(args, logger):
                 sys.exit(1)
         else:
             r2_sub = "None"
-    elif not args.coverage_depth and ori_coverage_depth < 100:
-        r1_sub = args.file_1
-        r2_sub = args.file_2
     else:
-        factor = float(float(args.coverage_depth) / float(ori_coverage_depth))
-        #print round(factor, 3)
-        r1_sub = "/tmp/%s" % os.path.basename(args.file_1)
-
-        # Downsample using seqtk
-        try:
-            keep_logging("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
-                args.file_1, factor, nproc, os.path.basename(args.file_1)),
-                         "seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
-                args.file_1, factor, nproc, os.path.basename(args.file_1)), logger, 'info')
-            call("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
-                args.file_1, factor, nproc, os.path.basename(args.file_1)), logger)
-        except sp.CalledProcessError:
-            keep_logging('Error running seqtk for downsampling raw fastq reads.',
-                         'Error running seqtk for downsampling raw fastq reads.', logger, 'exception')
-            sys.exit(1)
-
+        r1_sub = args.file_1
         if args.file_2:
-            r2_sub = "/tmp/%s" % os.path.basename(args.file_2)
-
-            try:
-                keep_logging("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
-                    args.file_2, factor, nproc, os.path.basename(args.file_2)),
-                             "seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
-                    args.file_2, factor, nproc, os.path.basename(args.file_2)), logger, 'info')
-                call("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
-                    args.file_2, factor, nproc, os.path.basename(args.file_2)), logger)
-            except sp.CalledProcessError:
-                keep_logging('Error running seqtk for downsampling raw fastq reads.',
-                             'Error running seqtk for downsampling raw fastq reads.', logger, 'exception')
-                sys.exit(1)
+            r2_sub = args.file_2
         else:
             r2_sub = "None"
 
+    # if not args.coverage_depth and ori_coverage_depth > 100:
+    #     # Downsample to 100
+    #     factor = float(100 / float(ori_coverage_depth))
+    #     print (factor)
+    #     r1_sub = "/tmp/%s" % os.path.basename(args.file_1)
+    #
+    #     # Downsample using seqtk
+    #     try:
+    #         keep_logging("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+    #             args.file_1, factor, nproc, os.path.basename(args.file_1)),
+    #                      "seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+    #             args.file_1, factor, nproc, os.path.basename(args.file_1)), logger, 'info')
+    #         call("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+    #             args.file_1, factor, nproc, os.path.basename(args.file_1)), logger)
+    #     except sp.CalledProcessError:
+    #         keep_logging('Error running seqtk for downsampling raw fastq reads.',
+    #                      'Error running seqtk for downsampling raw fastq reads.', logger, 'info')
+    #         sys.exit(1)
+    #
+    #     if args.file_2:
+    #         r2_sub = "/tmp/%s" % os.path.basename(args.file_2)
+    #
+    #         try:
+    #             keep_logging("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+    #                 args.file_2, factor, nproc, os.path.basename(args.file_2)),
+    #                          "seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+    #                 args.file_2, factor, nproc, os.path.basename(args.file_2)), logger, 'info')
+    #             call("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+    #                 args.file_2, factor, nproc, os.path.basename(args.file_2)), logger)
+    #         except sp.CalledProcessError:
+    #             keep_logging('Error running seqtk for downsampling raw fastq reads.',
+    #                          'Error running seqtk for downsampling raw fastq reads.', logger, 'exception')
+    #             sys.exit(1)
+    #     else:
+    #         r2_sub = "None"
+    # elif not args.coverage_depth and ori_coverage_depth < 100:
+    #     r1_sub = args.file_1
+    #     r2_sub = args.file_2
+    # else:
+    #     factor = float(float(args.coverage_depth) / float(ori_coverage_depth))
+    #     #print round(factor, 3)
+    #     r1_sub = "/tmp/%s" % os.path.basename(args.file_1)
+    #
+    #     # Downsample using seqtk
+    #     try:
+    #         keep_logging("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+    #             args.file_1, factor, nproc, os.path.basename(args.file_1)),
+    #                      "seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+    #             args.file_1, factor, nproc, os.path.basename(args.file_1)), logger, 'info')
+    #         call("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+    #             args.file_1, factor, nproc, os.path.basename(args.file_1)), logger)
+    #     except sp.CalledProcessError:
+    #         keep_logging('Error running seqtk for downsampling raw fastq reads.',
+    #                      'Error running seqtk for downsampling raw fastq reads.', logger, 'exception')
+    #         sys.exit(1)
+    #
+    #     if args.file_2:
+    #         r2_sub = "/tmp/%s" % os.path.basename(args.file_2)
+    #
+    #         try:
+    #             keep_logging("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+    #                 args.file_2, factor, nproc, os.path.basename(args.file_2)),
+    #                          "seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+    #                 args.file_2, factor, nproc, os.path.basename(args.file_2)), logger, 'info')
+    #             call("seqtk sample %s %s | pigz --fast -c -p %s > /tmp/%s" % (
+    #                 args.file_2, factor, nproc, os.path.basename(args.file_2)), logger)
+    #         except sp.CalledProcessError:
+    #             keep_logging('Error running seqtk for downsampling raw fastq reads.',
+    #                          'Error running seqtk for downsampling raw fastq reads.', logger, 'exception')
+    #             sys.exit(1)
+    #     else:
+    #         r2_sub = "None"
+    #
     return r1_sub, r2_sub
 
 """ Prepare ReadGroup option for BWA alignment """
@@ -643,9 +719,7 @@ def create_fai_index(reference, ref_fai_index):
 
 def picard_seqdict(dict_name, reference):
     keep_logging('Creating Sequence Dictionary using Picard.', 'Creating Sequence Dictionary using Picard.', logger, 'info')
-    cmd = "java -jar %s/%s/%s CreateSequenceDictionary REFERENCE=%s OUTPUT=%s/%s" % (
-    ConfigSectionMap("bin_path", Config)['binbase'], ConfigSectionMap("picard", Config)['picard_bin'],
-    ConfigSectionMap("picard", Config)['base_cmd'], reference, os.path.dirname(reference), dict_name)
+    cmd = "%s CreateSequenceDictionary REFERENCE=%s OUTPUT=%s/%s" % (ConfigSectionMap("picard", Config)['base_cmd'], reference, os.path.dirname(reference), dict_name)
     keep_logging(cmd, cmd, logger, 'debug')
     try:
         call(cmd, logger)
