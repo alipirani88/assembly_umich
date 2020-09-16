@@ -24,7 +24,7 @@ required.add_argument('-type', action='store', dest="type", help='Type of Fastq 
 optional.add_argument('-ariba', action='store', dest="ariba", help='Run Ariba to find AMR / MLST / both: possible options are AMR, MLST, both')
 optional.add_argument('-ariba_db', action='store', dest="ariba_db", help='Path to Ariba Database')
 optional.add_argument('-email', action='store', dest="email", help='email for PBS job notifications')
-optional.add_argument('-resources', action='store', dest="resources", help='PBS/SLURM resources for jobs')
+optional.add_argument('-resources', action='store', dest="resources", help='PBS/SLURM resources for jobs \nPBS:nodes=1:ppn=4,mem=47000mb,walltime=24:00:00 \nSLURM:--nodes=1 --ntasks=1 --cpus-per-task=1 --mem=5g --time=50:00:00')
 optional.add_argument('-assembly', action='store', dest="assembly", help='assembly: wga/plasmid/both. Default is both ')
 optional.add_argument('-suffix', action='store', dest="suffix", help='suffix for fastq read files ')
 optional.add_argument('-config', action='store', dest="config", help='Path to Config file, Make sure to check config settings before running pipeline', required=False)

@@ -3,6 +3,13 @@ from config_settings import ConfigSectionMap
 from modules.log_modules import keep_logging
 from modules.logging_subprocess import *
 import os
+import gzip
+
+def get_uncompressed_size(FileName):
+    with gzip.open(FileName, 'rb') as fd:
+        fd.seek(0, 2)
+        size = fd.tell()
+    return size
 
 # Prepare which assembler to use based on user-provided argument.
 def assembly(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, assembler, out_path, logger, Config, do_assembly):
@@ -106,6 +113,15 @@ def spades_assembly(forward_paired, reverse_paired, forward_unpaired, reverse_un
         cmdstring = ConfigSectionMap("spades", Config)['base_cmd'] + " " + ConfigSectionMap("spades", Config)['spades_parameters'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " --pe1-s " + forward_unpaired + " --pe1-s " + reverse_unpaired + " -o " + out_path + "spades_results"
         plasmid_cmdstring = ConfigSectionMap("spades", Config)['base_cmd'] + " " + ConfigSectionMap("spades", Config)['plasmid_spades_parameters'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " --pe1-s " + forward_unpaired + " --pe1-s " + reverse_unpaired + " -o " + out_path + "spades_plasmid_results"
 
+        # Check if unpaired files are empty
+        fwd_unpaired_size = get_uncompressed_size(forward_unpaired)
+        rev_unpaired_size = get_uncompressed_size(reverse_unpaired)
+        if fwd_unpaired_size == 0 or rev_unpaired_size == 0:
+            cmdstring = ConfigSectionMap("spades", Config)['base_cmd'] + " " + ConfigSectionMap("spades", Config)[
+                'spades_parameters'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " -o " + out_path + "spades_results"
+            plasmid_cmdstring = ConfigSectionMap("spades", Config)['base_cmd'] + " " + \
+                                ConfigSectionMap("spades", Config)[
+                                    'plasmid_spades_parameters'] + " --pe1-1 " + forward_paired + " --pe1-2 " + reverse_paired + " -o " + out_path + "spades_plasmid_results"
 
         if do_assembly == "both":
             keep_logging('Running Spades and plasmid Spades assembly', 'Running Spades and plasmid Spades assembly', logger, 'debug')
