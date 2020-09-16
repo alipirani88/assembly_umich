@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/assembly_umich.iml" filepath="$PROJECT_DIR$/.idea/assembly_umich.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/assemblage.iml" filepath="$PROJECT_DIR$/.idea/assemblage.iml" />
     </modules>
   </component>
 </project>

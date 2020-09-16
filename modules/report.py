@@ -136,7 +136,7 @@ if __name__ == '__main__':
     assembly_report(args)
 
     """ Run ariba_report module to aggregate the Ariba results and generate Ariba MLST and AMR reports"""
-    ariba_report(args)
+    #ariba_report(args)
 
     time_taken = datetime.now() - start_time_2
     #keep_logging('Total Time taken: {}'.format(time_taken), 'Total Time taken: {}'.format(time_taken), logger, 'info')
