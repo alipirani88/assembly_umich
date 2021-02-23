@@ -2,30 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e4087cd9-3af2-4808-a19c-5a38ec643df7" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/apirani.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assembly_jobs.py" beforeDir="false" afterPath="$PROJECT_DIR$/assembly_jobs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config" beforeDir="false" afterPath="$PROJECT_DIR$/config" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config_ali" beforeDir="false" afterPath="$PROJECT_DIR$/config_ali" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config_settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/config_settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/abacas.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/abacas.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/ariba.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/ariba.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/assembly.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/assembly.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/bedtools.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/bedtools.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/bioawk.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/bioawk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/picard.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/picard.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/pilon.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/pilon.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/prokka.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/prokka.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/qa_fastqc.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/qa_fastqc.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/quast.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/quast.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/reapr.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/reapr.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/report.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/report.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/samtools.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/samtools.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/trimmomatic.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/trimmomatic.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assembly_jobs.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assemblyenv.yml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/report.py" beforeDir="false" afterPath="$PROJECT_DIR$/report.py" afterDir="false" />
     </list>
     <ignored path="assembly_umich.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -44,11 +26,26 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="pipeline.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="assembly.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/modules/assembly.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-468">
+              <caret line="165" column="12" lean-forward="true" selection-start-line="165" selection-start-column="12" selection-end-line="165" selection-end-column="12" />
+              <folding>
+                <element signature="e#25#69#0" expanded="true" />
+                <element signature="e#1811#3798#0" />
+                <element signature="e#3873#7039#0" />
+                <element signature="e#7114#7830#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="pipeline.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pipeline.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="567">
-              <caret line="55" column="91" selection-start-line="55" selection-start-column="91" selection-end-line="55" selection-end-column="91" />
+            <state relative-caret-position="266">
+              <caret line="166" column="74" selection-start-line="166" selection-start-column="65" selection-end-line="166" selection-end-column="74" />
               <folding>
                 <element signature="e#67#82#0" expanded="true" />
               </folding>
@@ -56,28 +53,28 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="assembly_jobs.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/assembly_jobs.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="754">
-              <caret line="36" column="128" selection-start-line="36" selection-start-column="128" selection-end-line="36" selection-end-column="128" />
-              <folding>
-                <element signature="e#26#35#0" expanded="true" />
-              </folding>
+      <file leaf-file-name="pilon.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/modules/pilon.py">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+      <file leaf-file-name="README.md" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/README.md">
+          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+            <state split_layout="SPLIT">
+              <first_editor relative-caret-position="2058">
+                <caret line="98" column="192" selection-start-line="98" selection-start-column="192" selection-end-line="98" selection-end-column="192" />
+              </first_editor>
+              <second_editor />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="assembly.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/modules/assembly.py">
+      <file leaf-file-name="assemblage.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/assemblage.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="416">
-              <caret line="115" column="43" lean-forward="true" selection-start-line="115" selection-start-column="10" selection-end-line="115" selection-end-column="43" />
-              <folding>
-                <element signature="e#25#69#0" expanded="true" />
-                <element signature="e#1656#3643#0" />
-                <element signature="e#6959#7675#0" />
-              </folding>
+            <state relative-caret-position="588">
+              <caret line="37" selection-start-line="37" selection-end-line="37" selection-end-column="101" />
             </state>
           </provider>
         </entry>
@@ -98,15 +95,15 @@
       <find>print &quot;</find>
       <find>print</find>
       <find>pilon(</find>
-      <find>pilon</find>
       <find>Creating Sequence Dictionary using Picard</find>
       <find>nproc</find>
       <find>create_index</find>
       <find>file_exists_for_alignment</find>
       <find>run_pilon(</find>
       <find>downsample(</find>
-      <find>run_pilon</find>
       <find>ConfigSectionMap(&quot;spades&quot;)[</find>
+      <find>pilon</find>
+      <find>run_pilon</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -125,7 +122,6 @@
         <option value="$PROJECT_DIR$/assembly.py" />
         <option value="$PROJECT_DIR$/log_modules.py" />
         <option value="$PROJECT_DIR$/logging_subprocess.py" />
-        <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/modules/abacas.py" />
         <option value="$PROJECT_DIR$/modules/trimmomatic.py" />
         <option value="$PROJECT_DIR$/generate_jobs.py" />
@@ -138,13 +134,15 @@
         <option value="$PROJECT_DIR$/modules/ariba.py" />
         <option value="$PROJECT_DIR$/modules/bioawk.py" />
         <option value="$PROJECT_DIR$/modules/prokka.py" />
-        <option value="$PROJECT_DIR$/pipeline.py" />
         <option value="$PROJECT_DIR$/assembly_jobs.py" />
         <option value="$PROJECT_DIR$/modules/assembly.py" />
+        <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/assemblage.py" />
+        <option value="$PROJECT_DIR$/pipeline.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
+  <component name="ProjectFrameBounds" extendedState="1">
     <option name="y" value="23" />
     <option name="width" value="2560" />
     <option name="height" value="970" />
@@ -155,6 +153,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -171,7 +170,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -327,10 +325,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="2560" height="970" extended-state="0" />
+    <frame x="0" y="23" width="2560" height="970" extended-state="1" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.65063" visible="true" weight="0.1096108" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.6471936" visible="true" weight="0.11199365" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="right" id="R Packages" order="3" />
       <window_info anchor="right" id="R Graphics" order="3" />
@@ -338,7 +336,7 @@
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" />
-      <window_info active="true" id="Structure" order="1" sideWeight="0.34937" side_tool="true" visible="true" weight="0.1096108" />
+      <window_info id="Structure" order="1" sideWeight="0.35280642" side_tool="true" visible="true" weight="0.11199365" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -376,23 +374,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/assembly_jobs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="567">
-          <caret line="36" column="128" selection-start-line="36" selection-start-column="128" selection-end-line="36" selection-end-column="128" />
-          <folding>
-            <element signature="e#26#35#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/modules/bioawk.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="945">
-          <caret line="53" column="91" selection-start-line="52" selection-start-column="4" selection-end-line="53" selection-end-column="91" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/modules/bioawk.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="945">
@@ -433,7 +414,6 @@
     <entry file="file://$PROJECT_DIR$/assembly_jobs.py" />
     <entry file="file://$PROJECT_DIR$/README.md" />
     <entry file="file://$PROJECT_DIR$/assembly_jobs.py" />
-    <entry file="file://$PROJECT_DIR$/README.md" />
     <entry file="file://$PROJECT_DIR$/../../../scripts/data_download_utilities/download_SRA_from_ncbi.pbs" />
     <entry file="file://$PROJECT_DIR$/modules/bwa.py" />
     <entry file="file://$PROJECT_DIR$/modules/report.py" />
@@ -457,34 +437,46 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pipeline.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="567">
-          <caret line="55" column="91" selection-start-line="55" selection-start-column="91" selection-end-line="55" selection-end-column="91" />
-          <folding>
-            <element signature="e#67#82#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/assembly_jobs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="754">
-          <caret line="36" column="128" selection-start-line="36" selection-start-column="128" selection-end-line="36" selection-end-column="128" />
-          <folding>
-            <element signature="e#26#35#0" expanded="true" />
-          </folding>
+    <entry file="file://$PROJECT_DIR$/assembly_jobs.py" />
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="2058">
+            <caret line="98" column="192" selection-start-line="98" selection-start-column="192" selection-end-line="98" selection-end-column="192" />
+          </first_editor>
+          <second_editor />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/modules/assembly.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="416">
-          <caret line="115" column="43" lean-forward="true" selection-start-line="115" selection-start-column="10" selection-end-line="115" selection-end-column="43" />
+        <state relative-caret-position="-468">
+          <caret line="165" column="12" lean-forward="true" selection-start-line="165" selection-start-column="12" selection-end-line="165" selection-end-column="12" />
           <folding>
             <element signature="e#25#69#0" expanded="true" />
-            <element signature="e#1656#3643#0" />
-            <element signature="e#6959#7675#0" />
+            <element signature="e#1811#3798#0" />
+            <element signature="e#3873#7039#0" />
+            <element signature="e#7114#7830#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/assemblage.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="588">
+          <caret line="37" selection-start-line="37" selection-end-line="37" selection-end-column="101" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/modules/pilon.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pipeline.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="266">
+          <caret line="166" column="74" selection-start-line="166" selection-start-column="65" selection-end-line="166" selection-end-column="74" />
+          <folding>
+            <element signature="e#67#82#0" expanded="true" />
           </folding>
         </state>
       </provider>

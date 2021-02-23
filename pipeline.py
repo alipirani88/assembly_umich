@@ -54,6 +54,7 @@ def parser():
                           help='Downsample Reads to this user specified depth')
     optional.add_argument('-genome_size', action='store', dest="genome_size",
                           help='Genome Size. If not provided, will be estimated from Mash')
+    optional.add_argument('-pilon', action='store', dest="pilon", help='Run pilon yes/no. Default - yes')
     return parser
 
 # Main Pipeline
@@ -153,9 +154,17 @@ def pipeline(args, logger):
 
             # Use Spades assembly as a reference to map back reads and generate BAM for Pilon
             reference = "%s/spades_results/contigs.fasta" % (args.output_folder)
+            reference_plasmid = "%s/spades_plasmid_results/contigs.fasta" % (args.output_folder)
 
-            # Adding Pilon to the pipeline
-            (final_l500_contig, final_l500_plasmid_contig) = run_pilon(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, reference)
+            if args.pilon and args.pilon == "no":
+                # Add bioawk here
+                (final_l500_contig, final_l500_plasmid_contig) = bioawk(reference, reference_plasmid,
+                                                                        args.output_folder,
+                                                                        args.analysis_name, logger, Config,
+                                                                        args.assembly)
+            else:
+                # Adding Pilon to the pipeline
+                (final_l500_contig, final_l500_plasmid_contig) = run_pilon(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, reference)
 
             final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
             final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
@@ -257,45 +266,84 @@ def pipeline(args, logger):
             quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
             keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
         elif args.start_step == 3 and args.end_step == 4:
-            keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger, 'info')
-            quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
-            keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
 
+            contigs = args.output_folder + "/spades_results/contigs.fasta"
+            scaffolds = args.output_folder + "/spades_results/contigs.fasta"
+            plasmid_contigs = args.output_folder + "/spades_plasmid_results/contigs.fasta"
+            plasmid_scaffolds =  args.output_folder + "/spades_plasmid_results/contigs.fasta"
+
+            forward_paired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['f_p']
+            reverse_paired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['r_p']
+            forward_unpaired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['f_up']
+            reverse_unpaired = args.output_folder + ConfigSectionMap("Trimmomatic", Config)['r_up']
+
+
+            # Use Spades assembly as a reference to map back reads and generate BAM for Pilon
+            reference = "%s/spades_results/contigs.fasta" % (args.output_folder)
+            reference_plasmid = "%s/spades_plasmid_results/contigs.fasta" % (args.output_folder)
+
+            if args.pilon and args.pilon == "no":
+                # Add bioawk here
+                (final_l500_contig, final_l500_plasmid_contig) = bioawk(reference, reference_plasmid,
+                                                                        args.output_folder,
+                                                                        args.analysis_name, logger, Config,
+                                                                        args.assembly)
+            else:
+                # Adding Pilon to the pipeline
+                (final_l500_contig, final_l500_plasmid_contig) = run_pilon(forward_paired, reverse_paired,
+                                                                           forward_unpaired, reverse_unpaired,
+                                                                           reference)
+
+
+            final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
+            final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
+
+            # Order contigs with reference to the reference genome provided.
             if args.reference and args.reference != "None":
-                final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder, args.analysis_name, logger, Config)
-
+                final_ordered_contigs = abacas(reference_genome_path, final_l500_contig, args.output_folder,
+                                               args.analysis_name, logger, Config)
                 sed_cmd = "sed -i 's/>.*/>%s/g' %s" % (args.analysis_name[0:20], final_ordered_contigs)
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 os.system(sed_cmd)
-                final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
-                keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), 'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), logger, 'debug')
+                final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger,
+                                                 Config)
+                keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder),
+                             'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder),
+                             logger, 'debug')
             else:
-                print ("\nPlease provide a path to reference genome for Abacas\n")
+                print ("\nSkipping Abacas...\n")
                 final_ordered_contigs = final_l500_contig
-
+                print ("Replacing fasta header NODE with %s" % args.analysis_name[0:15])
                 sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_ordered_contigs)
                 sed_cmd_2 = "sed -i 's/_length_.*//g' %s" % (final_ordered_contigs)
-
                 keep_logging(sed_cmd, sed_cmd, logger, 'debug')
                 keep_logging(sed_cmd_2, sed_cmd_2, logger, 'debug')
-
                 os.system(sed_cmd)
                 os.system(sed_cmd_2)
-
-                final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger, Config)
-                keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), 'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder), logger, 'debug')
+                final_annotation_folder = prokka(final_ordered_contigs, args.output_folder, args.analysis_name, logger,
+                                                 Config)
+                keep_logging('Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder),
+                             'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder),
+                             logger, 'debug')
             sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_l500_plasmid_contig)
-
             sed_cmd_2 = "sed -i 's/_length_.*component//g' %s" % (final_l500_plasmid_contig)
-
             keep_logging(sed_cmd, sed_cmd, logger, 'debug')
             keep_logging(sed_cmd_2, sed_cmd, logger, 'debug')
             os.system(sed_cmd)
             os.system(sed_cmd_2)
-
             plasmid_first_part = args.analysis_name + "_plasmid"
-            final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part, logger, Config)
-            keep_logging('Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), 'Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder), logger, 'debug')
+            final_plasmid_annotation_folder = prokka(final_l500_plasmid_contig, args.output_folder, plasmid_first_part,
+                                                     logger, Config)
+            keep_logging('Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder),
+                         'Final Prokka Annotation files for plasmid are in: {}'.format(final_plasmid_annotation_folder),
+                         logger, 'debug')
+
+            keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger,
+                         'info')
+            quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
+            keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
+
+
         elif args.start_step == 4 and args.end_step == 4:
             final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
             final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)

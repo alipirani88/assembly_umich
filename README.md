@@ -2,13 +2,7 @@
 
 ## Synopsis
 
-This pipeline performs various assembly and post-assembly steps on Illumina PE/SE reads. The various steps of the pipeline are - clean reads with Trimmomatic, assemble clean reads with SPAdes assembler, perform post-assembly correction with PILON, AMR and MLST typing using ARIBA.
-
-<!---
-This pipeline takes Illumina PE/SE FastQ reads as input for various steps of pre-processing, assembly, evaluation, assembly improvement and annotation steps.
-Require testing: The pipeline can also be used to run ariba for finding resistance genes and MLST typing.
--->
-
+This pipeline runs various assembly and post-assembly steps on Illumina PE/SE reads. The different steps of the pipeline are - downsample reads using Seqtk/Mash (optional), clean reads with Trimmomatic, assemble clean reads with SPAdes assembler, perform post-assembly correction with PILON, perform AMR and MLST typing using ARIBA (Deprecated).
 
 ## Contents:
 
@@ -22,7 +16,30 @@ Require testing: The pipeline can also be used to run ariba for finding resistan
 
 ## Installation
 
-Pending. 
+The pipeline can be set up in two easy steps:
+
+> 1. Clone the github directory onto your system.
+
+```
+git clone https://github.com/alipirani88/assemblage.git
+
+```
+
+> 2. Use assemblage/assemblage.yml and assemblage/assemblage_report.yml files to create conda environment.
+
+Create two new environments - varcall and varcall_gubbins
+```
+conda env create -f assemblage/assemblage.yml -n assemblage
+conda env create -f assemblage/assemblage_report.yml -n assemblage_report
+```
+
+Check installation
+
+```
+conda activate assemblage
+
+python assemblage/assemblage.py -h
+```
 
 ## Input
 
@@ -40,64 +57,50 @@ To generate assembly jobs, you need a filename with fastq read sample names. The
 ls /path-to-/test_readsdir/*_R1_*.fastq.gz | awk -F'/' '{print $(NF)}' > /PATH-to-save/filenames
 
 ```
--->
 
 ## Steps
 
 Image here
-
+-->
 
 
 ## Quick Start
 
 
-Assuming you want to assemble a few hundred samples and run the analysis in parallel on cluster(Time and memory efficient). The minimum pbs cluster resources required for SPAdes assembler is: 
-
-```
-nodes=1:ppn=4,mem=47000mb,walltime=24:00:00
-```
-
-See option resources in scheduler section of [config](https://github.com/alipirani88/variant_calling_pipeline/blob/master/config) file. Detailed information in section [Customizing Config file](#customizing-config-file)
-
-- Generate and run assembly jobs for a set of PE reads with above pbs resources. 
+### Generate and run assembly jobs for a set of PE reads. 
 
 
 ```
 
-/nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich/assembly_jobs.py -dir /scratch/esnitkin_fluxod/apirani/varcall_testing/reads_dir/ -out_dir /scratch/esnitkin_fluxod/apirani/varcall_testing/assembly_demo/ -pipeline assembly -type PE -email apirani@umich.edu -resources nodes=1:ppn=4,mem=47000mb,walltime=24:00:00
+python assemblage/assemblage.py -dir /Path-t-/Reads-dir/ -out_dir /Path-to/output-dir/ -type PE -email username@umich.edu -resources "--nodes=1 --ntasks=1 --cpus-per-task=1 --mem=5g --time=50:00:00" -scheduler SLURM -coverage_depth 150 -downsample yes -config assemblage/config
 
 ```
 
-To run ariba for detecting AMR genes or MLST or both, run the above command with -ariba option. The possible options for ariba are: AMR, MLST, both. 
+ The above command will generate and run assembly jobs for a set of PE reads residing in Reads-dir. The results will be saved in output directory output-dir. 
 
-Note: Make sure to set the ariba database in your config file.
+- Optional - The config file contains options for some frequently used reference genome to use with ABACAS for reordering. To know which reference genomes are included in config file, look up the [config]() file or check the help menu of the pipeline. 
 
-```
+- The assembly will be placed in an individual folder generated for each sample in output directory. 
+- A log file for each sample will be generated and can be found in each sample folder inside the output directory. A single log file of this step will be generated in main output directory. For more information on log file prefix and convention, please refer [log](#log) section below.
 
-/nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich/assembly_jobs.py -dir /scratch/esnitkin_fluxod/apirani/varcall_testing/reads_dir/ -out_dir /scratch/esnitkin_fluxod/apirani/varcall_testing/assembly_demo/ -pipeline assembly -type PE -email apirani@umich.edu -resources nodes=1:ppn=4,mem=47000mb,walltime=24:00:00 -ariba AMR
-
-or
-
-/nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich/assembly_jobs.py -dir /scratch/esnitkin_fluxod/apirani/varcall_testing/reads_dir/ -out_dir /scratch/esnitkin_fluxod/apirani/varcall_testing/assembly_demo/ -pipeline assembly -type PE -email apirani@umich.edu -resources nodes=1:ppn=4,mem=47000mb,walltime=24:00:00 -ariba both
-
+### Gather and Generate a Multiqc report for the assembly results.
 
 ```
 
-The above command will generate and run assembly jobs for a set of PE reads residing in test_readsdir. The results will be saved in output directory test_output. The config file contains options for some frequently used reference genome to use with ABACAS for reordering. To know which reference genomes are included in config file, look up the [config]() file or check the help menu of the pipeline. 
+conda activate assemblage_report
 
-The assembly will be placed in an individual folder generated for each sample in output directory. A log file for each sample will be generated and can be found in each sample folder inside the out directory. A single log file of this step will be generated in main output directory. For more information on log file prefix and convention, please refer [log](#log) section below.
+python assemblage/report.py -out_dir /Path-to/output-dir/
 
-Generate a multiqc and ariba summary report for the assembly results.
-
-```
-
-/nfs/esnitkin/bin_group/anaconda2/bin/python /nfs/esnitkin/bin_group/pipeline/Github/assembly_umich/modules/report.py -out_dir /scratch/esnitkin_fluxod/apirani/varcall_testing/assembly_demo/ -ariba_preset minimal
 
 ```
 
 ## Output
 
-Results for each sample can be found in its own individual folder. Each sample folder will contain the assembly fasta file with a suffix \_l500_contigs.fasta and \_l500_plasmid_contigs.fasta. Prokka results can be found in \_prokka directory.
+- The report script will gather the assembly fasta file in Results/YYYY-MM-DD_assembly and YYYY-MM-DD_plasmid_assembly folders. It will run and generate QUAST/multiqc results in /Report/Quast/
+
+- Results for each sample can be found in its own individual folder. Each sample folder will contain the assembly fasta file with a suffix \_l500_contigs.fasta and \_l500_plasmid_contigs.fasta. 
+
+- Prokka results can be found in \_prokka directory.
 
 <!---
 A script is provided with the pipeline, assembly_jobs.py that will take this filenames and other arguments to generate assembly jobs. To generate assembly jobs for flux, run the below command:

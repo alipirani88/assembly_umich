@@ -73,9 +73,11 @@ def assembly_report(args):
     make_sure_path_exists("%s/Results/%s_plasmid_assembly" % (args.out_dir, start_time))
     make_sure_path_exists("%s/Report/Quast" % args.out_dir)
 
-    list_of_assembly_fasta = glob.glob("%s/*/*_l500_contigs.fasta" % args.out_dir)
+    #list_of_assembly_fasta = glob.glob("%s/*/*_l500_contigs.fasta" % args.out_dir)
+    list_of_assembly_fasta = glob.glob("%s/*/*.fasta" % args.out_dir)
     for i in list_of_assembly_fasta:
-        move_cmd = "cp %s %s/Results/%s_assembly/%s.fasta" % (
+        #move_cmd = "cp %s %s/Results/%s_assembly/%s.fasta" % (i, args.out_dir, start_time, os.path.basename(i).replace('_l500_contigs.fasta', ''))
+        move_cmd = "cp %s %s/Results/%s_assembly/%s" % (
         i, args.out_dir, start_time, os.path.basename(i).replace('_l500_contigs.fasta', ''))
         print (move_cmd)
         os.system(move_cmd)
