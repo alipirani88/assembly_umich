@@ -56,10 +56,6 @@ def quast_evaluation(out_path, contigs):
 
     cmd_assembly = "/nfs/esnitkin/bin_group/quast/quast.py " + contigs + " -o " + out_path + "/Report/Quast/%s" % (os.path.basename(contigs.replace('.fasta', '_quast_results'))) + " --contig-thresholds 0,1000,5000,10000,25000,50000"
     print (cmd_assembly)
-    f = open("%s/Quast_commands.sh" % out_path, "a")
-    f.write(cmd_assembly + '\n')
-    f.close()
-
     try:
         os.system(cmd_assembly)
     except sp.CalledProcessError:
@@ -73,17 +69,9 @@ def assembly_report(args):
     make_sure_path_exists("%s/Results/%s_plasmid_assembly" % (args.out_dir, start_time))
     make_sure_path_exists("%s/Report/Quast" % args.out_dir)
 
-<<<<<<< HEAD
-    #list_of_assembly_fasta = glob.glob("%s/*/*_l500_contigs.fasta" % args.out_dir)
-    list_of_assembly_fasta = glob.glob("%s/*/*.fasta" % args.out_dir)
-    for i in list_of_assembly_fasta:
-        #move_cmd = "cp %s %s/Results/%s_assembly/%s.fasta" % (i, args.out_dir, start_time, os.path.basename(i).replace('_l500_contigs.fasta', ''))
-        move_cmd = "cp %s %s/Results/%s_assembly/%s" % (
-=======
     list_of_assembly_fasta = glob.glob("%s/*/*_l500_contigs.fasta" % args.out_dir)
     for i in list_of_assembly_fasta:
         move_cmd = "cp %s %s/Results/%s_assembly/%s.fasta" % (
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
         i, args.out_dir, start_time, os.path.basename(i).replace('_l500_contigs.fasta', ''))
         print (move_cmd)
         os.system(move_cmd)
@@ -103,7 +91,6 @@ def assembly_report(args):
     print ("Generating MultiQC assembly report for samples in %s" % args.out_dir)
     os.chdir("%s/Report/Quast/" % args.out_dir)
     multiqc_cmd = "multiqc -f --outdir %s/Report/Quast/ -n %s_assembly_report -i %s_assembly_report %s/Report/Quast/" % (args.out_dir, uniq_time_prefix, uniq_time_prefix, args.out_dir)
-    print multiqc_cmd
     os.system(multiqc_cmd)
 
 

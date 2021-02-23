@@ -54,7 +54,10 @@ def parser():
                           help='Downsample Reads to this user specified depth')
     optional.add_argument('-genome_size', action='store', dest="genome_size",
                           help='Genome Size. If not provided, will be estimated from Mash')
+<<<<<<< HEAD
     optional.add_argument('-pilon', action='store', dest="pilon", help='Run pilon yes/no. Default - yes')
+=======
+>>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
     return parser
 
 # Main Pipeline
@@ -166,6 +169,12 @@ def pipeline(args, logger):
                 # Adding Pilon to the pipeline
                 (final_l500_contig, final_l500_plasmid_contig) = run_pilon(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, reference)
 
+<<<<<<< HEAD
+=======
+            # Adding Pilon to the pipeline
+            (final_l500_contig, final_l500_plasmid_contig) = run_pilon(forward_paired, reverse_paired, forward_unpaired, reverse_unpaired, reference)
+
+>>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
             final_l500_contig = "%s/%s_l500_contigs.fasta" % (args.output_folder, args.analysis_name)
             final_l500_plasmid_contig = "%s/%s_l500_plasmid_contigs.fasta" % (args.output_folder, args.analysis_name)
 
@@ -258,6 +267,14 @@ def pipeline(args, logger):
 
             keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger,
                          'info')
+<<<<<<< HEAD
+=======
+            quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
+            keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
+
+        elif args.start_step == 3 and args.end_step == 3:
+            keep_logging('START: Assembly Evaluation using QUAST', 'START: Assembly Evaluation using QUAST', logger, 'info')
+>>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
             quast_evaluation(args.output_folder, final_l500_contig, final_l500_plasmid_contig, logger, Config)
             keep_logging('END: Assembly Evaluation using QUAST', 'END: Assembly Evaluation using QUAST', logger, 'info')
 
@@ -311,7 +328,11 @@ def pipeline(args, logger):
                              'Final Prokka Annotation files for genome are in: {}'.format(final_annotation_folder),
                              logger, 'debug')
             else:
+<<<<<<< HEAD
                 print ("\nSkipping Abacas...\n")
+=======
+                print ("\nPlease provide a path to reference genome for Abacas\n")
+>>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
                 final_ordered_contigs = final_l500_contig
                 print ("Replacing fasta header NODE with %s" % args.analysis_name[0:15])
                 sed_cmd = "sed -i 's/>NODE/>%s/g' %s" % (args.analysis_name[0:15], final_ordered_contigs)

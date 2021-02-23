@@ -35,10 +35,6 @@ optional.add_argument('-coverage_depth', action='store', dest="coverage_depth",
 optional.add_argument('-scheduler', action='store', dest="scheduler",
                           help='Type of Scheduler for generating cluster jobs: PBS, SLURM, LOCAL')
 optional.add_argument('-reference', action='store', dest="reference", help='Reference Genome to be used for pipeline [Deprecated]')
-<<<<<<< HEAD
-optional.add_argument('-pilon', action='store', dest="pilon", help='Run pilon yes/no. Default - yes')
-=======
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
 args = parser.parse_args()
 
 
@@ -129,11 +125,7 @@ def get_scheduler_directive(scheduler, Config):
 
 
 
-<<<<<<< HEAD
-def create_assembly_jobs(list_of_files):
-=======
 def create_new_assembly_jobs(list_of_files):
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
     """Takes fastq file directory, optional list of filenames, type of sequence data and  generate assembly jobs.
             Args:
                 filenames: Generate assembly jobs for a list of fastq files
@@ -159,117 +151,64 @@ def create_new_assembly_jobs(list_of_files):
                 second_part = filename_base.replace("R1_001_final.fastq.gz", "R2_001_final.fastq.gz")
                 first_part_split = filename_base.split('R1_001_final.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
-<<<<<<< HEAD
-                #first_part = re.sub("_S.*_", "", first_part)
-=======
                 first_part = re.sub("_S.*_", "", first_part)
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
             if "_R1.fastq.gz" in filename_base:
                 second_part = filename_base.replace("_R1.fastq.gz", "_R2.fastq.gz")
                 first_part_split = filename_base.split('_R1.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
                 first_part = re.sub("_S.*_", "", first_part)
-<<<<<<< HEAD
-                #first_part = first_part.replace('_R1.fastq.gz', '')
-=======
                 first_part = first_part.replace('_R1.fastq.gz', '')
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
             if "1_combine.fastq.gz" in filename_base:
                 second_part = filename_base.replace("1_combine.fastq.gz", "2_combine.fastq.gz")
                 first_part_split = filename_base.split('1_combine.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
-<<<<<<< HEAD
-                #first_part = re.sub("_S.*_", "", first_part)
-=======
                 first_part = re.sub("_S.*_", "", first_part)
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
             if "1_sequence.fastq.gz" in filename_base:
                 second_part = filename_base.replace("1_sequence.fastq.gz", "2_sequence.fastq.gz")
                 first_part_split = filename_base.split('1_sequence.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
-<<<<<<< HEAD
-                #first_part = re.sub("_S.*_", "", first_part)
-=======
                 first_part = re.sub("_S.*_", "", first_part)
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
             if "_forward.fastq.gz" in filename_base:
                 second_part = filename_base.replace("_forward.fastq.gz", "_reverse.fastq.gz")
                 first_part_split = filename_base.split('_forward.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
-<<<<<<< HEAD
-                #first_part = re.sub("_S.*_", "", first_part)
-            if "R1_001.fastq.gz" in filename_base:
-                #print ("here")
-                #print (filename_base)
-                second_part = str(filename_base).replace("R1_001.fastq.gz", "R2_001.fastq.gz")
-                first_part_split = filename_base.split('R1_001.fastq.gz')
-                first_part = first_part_split[0].replace('_L001', '')
-                #first_part = re.sub("_S.*_", "", first_part)
-=======
                 first_part = re.sub("_S.*_", "", first_part)
             if "R1_001.fastq.gz" in filename_base:
                 second_part = filename_base.replace("R1_001.fastq.gz", "R2_001.fastq.gz")
                 first_part_split = filename_base.split('R1_001.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
                 first_part = re.sub("_S.*_", "", first_part)
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
             if re.search("R1_001.fastq.gz", filename_base):
                 second_part = filename_base.replace("_R1_001.fastq.gz", "_R2_001.fastq.gz")
                 first_part_split = filename_base.split('_R1_001.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
-<<<<<<< HEAD
-                #first_part = re.sub("_S.*_", "", first_part)
-=======
                 first_part = re.sub("_S.*_", "", first_part)
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
 
             if "_1.fastq.gz" in filename_base:
                 second_part = filename_base.replace("_1.fastq.gz", "_2.fastq.gz")
                 first_part_split = filename_base.split('_1.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
-<<<<<<< HEAD
-                #first_part = re.sub("_S.*_", "", first_part)
-=======
                 first_part = re.sub("_S.*_", "", first_part)
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
             if ".1.fastq.gz" in filename_base:
                 second_part = filename_base.replace(".1.fastq.gz", ".2.fastq.gz")
                 first_part_split = filename_base.split('.1.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
-<<<<<<< HEAD
-                #first_part = re.sub("_S.*_", "", first_part)
-=======
                 first_part = re.sub("_S.*_", "", first_part)
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
             if "_1.fastq.gz" in filename_base:
                 second_part = filename_base.replace("_1.fastq.gz", "_2.fastq.gz")
                 first_part_split = filename_base.split('_1.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
-<<<<<<< HEAD
-                #first_part = re.sub("_S.*_", "", first_part)
-=======
                 first_part = re.sub("_S.*_", "", first_part)
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
             else:
                 second_part = filename_base.replace("_R1_001.fastq.gz", "_R2_001.fastq.gz")
                 first_part_split = filename_base.split('_R1_001.fastq.gz')
                 first_part = first_part_split[0].replace('_L001', '')
-<<<<<<< HEAD
-                #first_part = re.sub("_S.*_", "", first_part)
-            # Get the name of reverse reads files
-            #first_part = re.sub("_S.*_", "", first_part)
-            second_part = filename_base.replace("_R1.fastq.gz", "_R2.fastq.gz")
-            # first_part_split = filename_base.split('_R1.fastq.gz')
-            first_part = first_part_split[0].replace('_L001', '')
-            #first_part = re.sub("_S.*_", "", first_part)
-=======
                 first_part = re.sub("_S.*_", "", first_part)
             # Get the name of reverse reads files
             second_part = filename_base.replace("_R1.fastq.gz", "_R2.fastq.gz")
             # first_part_split = filename_base.split('_R1.fastq.gz')
             first_part = first_part_split[0].replace('_L001', '')
             first_part = re.sub("_S.*_", "", first_part)
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
             first_part = first_part.replace('_R1.fastq.gz', '')
 
             first_file = file
@@ -299,14 +238,6 @@ def create_new_assembly_jobs(list_of_files):
                 depth = 100
             command = command + " -downsample yes -coverage_depth %s" % depth
 
-<<<<<<< HEAD
-        if args.pilon:
-            command = command + " -pilon %s" % args.pilon
-        else:
-            command = command + " -pilon yes"
-
-=======
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
         if args.scheduler == "SLURM":
             job_name = jobs_temp_dir + "/" + first_part + ".sbat"
             submit_cmd = "sbatch"
@@ -346,8 +277,4 @@ Config = configparser.ConfigParser()
 Config.read(config_file)
 logger = generate_logger(args.dir, "assembly", log_unique_time)
 print (list_of_files)
-<<<<<<< HEAD
-create_assembly_jobs(list_of_files)
-=======
 create_new_assembly_jobs(list_of_files)
->>>>>>> 09565177f3a85722989ef80167ec09f603f993ae
